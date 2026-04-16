@@ -1307,6 +1307,10 @@ html[dir="rtl"] .search-box input {
     display: none !important;
   }
   
+  .mobile-hidden {
+    display: none !important;
+  }
+  
   .alert-item {
     flex-wrap: wrap;
     padding: 14px !important;

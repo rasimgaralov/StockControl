@@ -14,6 +14,7 @@ export default function TransferlerPage() {
   const [filterDept, setFilterDept] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showMobileDatePicker, setShowMobileDatePicker] = useState(false);
   
   const [formData, setFormData] = useState({
     productId: '', fromDeptId: '', toDeptId: '', quantity: ''
@@ -181,20 +182,49 @@ export default function TransferlerPage() {
       </div>
 
       {/* Filter */}
-      <div className="toolbar" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ flex: 1, minWidth: '200px' }}>
-          <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-            <option value="all">{t('productsPage.allDepartments')}</option>
-            {departments.map(d => (
-              <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
-            ))}
-          </select>
+      <div className="toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', width: '100%', gap: '12px' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
+              <option value="all">{t('productsPage.allDepartments')}</option>
+              {departments.map(d => (
+                <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+              ))}
+            </select>
+          </div>
+          <button 
+            className="btn btn-secondary mobile-only" 
+            onClick={() => setShowMobileDatePicker(!showMobileDatePicker)}
+            style={{ padding: '0 14px', height: '45px', display: 'flex', alignItems: 'center' }}
+            title="Toggle Date Filter"
+          >
+            📅
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        
+        <div className={showMobileDatePicker ? '' : 'mobile-hidden'} style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('transfersPage.dateRange')}</span>
-          <input className="form-input" style={{ width: '140px', background: 'var(--bg-surface)' }} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          <input 
+            className="form-input" 
+            style={{ width: '140px', background: 'var(--bg-surface)' }} 
+            type={startDate ? "date" : "text"} 
+            placeholder="Select Date"
+            onFocus={(e) => e.target.type = 'date'}
+            onBlur={(e) => { if (!startDate) e.target.type = 'text'; }}
+            value={startDate} 
+            onChange={(e) => setStartDate(e.target.value)} 
+          />
           <span style={{ color: 'var(--text-muted)' }}>-</span>
-          <input className="form-input" style={{ width: '140px', background: 'var(--bg-surface)' }} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <input 
+            className="form-input" 
+            style={{ width: '140px', background: 'var(--bg-surface)' }} 
+            type={endDate ? "date" : "text"} 
+            placeholder="Select Date"
+            onFocus={(e) => e.target.type = 'date'}
+            onBlur={(e) => { if (!endDate) e.target.type = 'text'; }}
+            value={endDate} 
+            onChange={(e) => setEndDate(e.target.value)} 
+          />
         </div>
       </div>
 
