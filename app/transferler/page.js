@@ -20,6 +20,15 @@ export default function TransferlerPage() {
   });
   const [errorMsg, setErrorMsg] = useState('');
 
+  const [productSearch, setProductSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const filteredModalProducts = useMemo(() => {
+    if (!productSearch || !showDropdown) return products;
+    const q = productSearch.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(q));
+  }, [products, productSearch, showDropdown]);
+
   const filtered = useMemo(() => {
     let result = transfersList;
     if (filterDept !== 'all') {
@@ -39,12 +48,15 @@ export default function TransferlerPage() {
   }, [transfersList, filterDept, startDate, endDate]);
 
   const openModal = () => {
+    const defaultProduct = products[0];
     setFormData({
-      productId: products[0]?.id || '',
+      productId: defaultProduct?.id || '',
       fromDeptId: departments.find(d => d.name === 'Depo')?.id || departments[0]?.id || '',
       toDeptId: departments[0]?.id || '',
       quantity: ''
     });
+    setProductSearch(defaultProduct?.name || '');
+    setShowDropdown(false);
     setErrorMsg('');
     setShowModal(true);
   };
@@ -245,13 +257,59 @@ export default function TransferlerPage() {
               </div>
             </div>
           )}
-          <div className="form-group">
+          <div className="form-group" style={{ position: 'relative' }}>
             <label className="form-label">{t('transfersPage.productLabel')}</label>
-            <select className="form-select" value={formData.productId} onChange={(e) => setFormData({ ...formData, productId: e.target.value })}>
-              {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.quantity} {tData(p.unit, 'units')})</option>
-              ))}
-            </select>
+            <div style={{ position: 'relative' }}>
+              <input 
+                className="form-input" 
+                type="text" 
+                placeholder="Ürün adı yazın..." 
+                value={productSearch}
+                onChange={(e) => {
+                  setProductSearch(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => {
+                  setProductSearch('');
+                  setShowDropdown(true);
+                }}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+              />
+              {formData.productId && !showDropdown && productSearch && (
+                <div style={{ position: 'absolute', right: '14px', top: '10px', color: 'var(--color-success)', fontSize: '14px', pointerEvents: 'none' }}>
+                  ✓
+                </div>
+              )}
+
+              {showDropdown && (
+                <ul className="dropdown-menu-list" style={{ 
+                  position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface)', 
+                  border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', 
+                  maxHeight: '200px', overflowY: 'auto', zIndex: 1000, margin: '4px 0 0 0', padding: 0,
+                  boxShadow: 'var(--shadow-md)', listStyle: 'none'
+                }}>
+                  {filteredModalProducts.length === 0 ? (
+                    <li style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '14px' }}>Bulunamadı</li>
+                  ) : (
+                    filteredModalProducts.map(p => (
+                      <li 
+                        key={p.id} 
+                        style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: '14px', background: formData.productId === p.id ? 'var(--bg-surface-hover)' : 'transparent' }}
+                        onMouseDown={() => {
+                          setFormData({ ...formData, productId: p.id });
+                          setProductSearch(p.name);
+                          setShowDropdown(false);
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = formData.productId === p.id ? 'var(--bg-surface-hover)' : 'transparent'}
+                      >
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>({p.quantity} {tData(p.unit, 'units')})</span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              )}
+            </div>
           </div>
           <div className="form-row">
             <div className="form-group">
