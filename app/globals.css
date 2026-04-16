@@ -1306,4 +1306,20 @@ html[dir="rtl"] .search-box input {
   .desktop-only {
     display: none !important;
   }
+  
+  .alert-item {
+    flex-wrap: wrap;
+    padding: 14px !important;
+  }
+  .alert-item-content {
+    min-width: 0;
+    max-width: calc(100% - 50px);
+  }
+  .alert-action-group {
+    width: 100%;
+    margin-top: 10px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border-color);
+    justify-content: space-between;
+  }
 }

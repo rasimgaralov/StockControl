@@ -40,15 +40,6 @@ function AlarmlarContent() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>{t('alarmsPage.loading')}</p>
-      </div>
-    );
-  }
-
   const criticalCount = activeAlerts.filter(a => a.alertType === 'critical_stock').length;
   const expiryCount = activeAlerts.filter(a => a.alertType === 'expiry_warning').length;
 
@@ -67,9 +58,19 @@ function AlarmlarContent() {
     return result;
   }, [activeAlerts, search, filter, getProductById]);
 
+  // Hacky effect hook alternative from useMemo.
   useMemo(() => {
     setCurrentPage(1);
   }, [search, filter]);
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>{t('alarmsPage.loading')}</p>
+      </div>
+    );
+  }
 
   const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
   const displayedAlerts = filteredAlerts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -173,7 +174,7 @@ function AlarmlarContent() {
                     <div className="alert-item-title">{product?.name || t('alarmsPage.unknownProduct')}</div>
                     <div className="alert-item-desc">{desc}</div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="alert-action-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div className="alert-item-time">{formatDateTime(alert.triggeredAt)}</div>
                     <button
                       className="btn btn-sm btn-primary"
