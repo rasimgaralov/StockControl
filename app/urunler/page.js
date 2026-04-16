@@ -24,7 +24,7 @@ export default function UrunlerPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const [formData, setFormData] = useState({
-    name: '', quantity: '', unit: 'kg', supplier: '', expiryDate: '', criticalThreshold: '', deptId: ''
+    name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: ''
   });
 
   // Today's date for 'min' attribute in YYYY-MM-DD format based on local timezone
@@ -37,7 +37,7 @@ export default function UrunlerPage() {
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(p =>
-        p.name.toLowerCase().includes(q) || p.supplier.toLowerCase().includes(q)
+        p.name.toLowerCase().includes(q) || (p.supplier_en && p.supplier_en.toLowerCase().includes(q))
       );
     }
 
@@ -79,7 +79,7 @@ export default function UrunlerPage() {
   };
 
   const openAddModal = () => {
-    setFormData({ name: '', quantity: '', unit: 'kg', supplier: '', expiryDate: '', criticalThreshold: '', deptId: departments[0]?.id || '' });
+    setFormData({ name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: departments[0]?.id || '' });
     setEditProduct(null);
     setShowAddModal(true);
   };
@@ -88,8 +88,10 @@ export default function UrunlerPage() {
     setFormData({
       name: product.name,
       quantity: product.quantity,
-      unit: product.unit,
-      supplier: product.supplier,
+      unit_en: product.unit_en,
+      unit_ar: product.unit_ar,
+      supplier_en: product.supplier_en,
+      supplier_ar: product.supplier_ar,
       expiryDate: product.expiryDate || '',
       criticalThreshold: product.criticalThreshold,
       deptId: product.deptId,
@@ -281,11 +283,20 @@ export default function UrunlerPage() {
             </div>
             <div className="form-group">
               <label className="form-label">{t('productsPage.unitLabel')}</label>
-              <select className="form-select" value={formData.unit_en} onChange={(e) => setFormData({ ...formData, unit_en: e.target.value, unit_ar: e.target.value })}>
-                <option value="kg">kg</option>
-                <option value="litre">litre</option>
-                <option value="adet">adet</option>
-                <option value="paket">paket</option>
+              <select className="form-select" value={formData.unit_en} onChange={(e) => {
+                const opts = [
+                  { en: 'kg', ar: 'كجم' },
+                  { en: 'pcs', ar: 'قطع' },
+                  { en: 'liters', ar: 'لتر' },
+                  { en: 'pack', ar: 'عبوة' }
+                ];
+                const selected = opts.find(u => u.en === e.target.value) || opts[0];
+                setFormData({ ...formData, unit_en: selected.en, unit_ar: selected.ar });
+              }}>
+                <option value="kg">{lang === 'ar' ? 'كجم' : 'kg'}</option>
+                <option value="liters">{lang === 'ar' ? 'لتر' : 'liters'}</option>
+                <option value="pcs">{lang === 'ar' ? 'قطع' : 'pcs'}</option>
+                <option value="pack">{lang === 'ar' ? 'عبوة' : 'pack'}</option>
               </select>
             </div>
           </div>

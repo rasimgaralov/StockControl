@@ -12,7 +12,7 @@ export default function FireZayiPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    productId: '', deptId: '', quantity: '', reason: ''
+    productId: '', deptId: '', quantity: '', reason_en: '', reason_ar: ''
   });
 
   const totalWaste = wasteLogsList.reduce((sum, w) => sum + w.quantity, 0);
@@ -29,7 +29,8 @@ export default function FireZayiPage() {
       productId: products[0]?.id || '',
       deptId: departments[0]?.id || '',
       quantity: '',
-      reason: ''
+      reason_en: '',
+      reason_ar: ''
     });
     setShowModal(true);
   };
@@ -40,7 +41,8 @@ export default function FireZayiPage() {
       productId: formData.productId,
       deptId: formData.deptId,
       quantity: Number(formData.quantity),
-      reason: formData.reason,
+      reason_en: formData.reason_en,
+      reason_ar: formData.reason_ar,
     });
     setShowModal(false);
   };
