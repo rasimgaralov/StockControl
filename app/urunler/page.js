@@ -182,7 +182,6 @@ export default function UrunlerPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th className="action-mobile">{t('productsPage.table.action')}</th>
                 <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
                   {t('productsPage.table.productName')} {sortBy === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
                 </th>
@@ -196,7 +195,7 @@ export default function UrunlerPage() {
                   {t('productsPage.table.expiry')} {sortBy === 'expiry' && (sortDir === 'asc' ? '↑' : '↓')}
                 </th>
                 <th>{t('productsPage.table.status')}</th>
-                <th className="action-desktop">{t('productsPage.table.action')}</th>
+                <th>{t('productsPage.table.action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -212,13 +211,12 @@ export default function UrunlerPage() {
               ) : (
                 displayedProducts.map(p => (
                   <tr key={p.id}>
-                    <td className="action-mobile">
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={() => openEditModal(p)}>✏️</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => deleteProduct(p.id)}>🗑️</button>
+                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button className="btn btn-secondary btn-sm mobile-only" style={{ padding: '2px 6px', fontSize: '11px' }} onClick={() => openEditModal(p)}>✏️</button>
+                        <span>{p.name}</span>
                       </div>
                     </td>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</td>
                     <td style={{
                       fontWeight: 700,
                       color: getStockStatus(p) === 'critical' ? 'var(--color-danger)' : getStockStatus(p) === 'warning' ? 'var(--color-warning)' : 'var(--text-primary)'
@@ -230,9 +228,9 @@ export default function UrunlerPage() {
                     <td><span className="badge badge-purple">{tData(getDeptName(p.deptId), 'departments')}</span></td>
                     <td>{formatDate(p.expiryDate)}</td>
                     <td>{getStatusBadge(p)}</td>
-                    <td className="action-desktop">
+                    <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-secondary btn-sm" onClick={() => openEditModal(p)}>✏️</button>
+                        <button className="btn btn-secondary btn-sm desktop-only" onClick={() => openEditModal(p)}>✏️</button>
                         <button className="btn btn-danger btn-sm" onClick={() => deleteProduct(p.id)}>🗑️</button>
                       </div>
                     </td>
