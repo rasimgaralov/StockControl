@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function Dashboard() {
   const { products, transfersList, wasteLogsList, activeAlerts, criticalProducts, todayTransfers, departments, getDeptName, getDeptIcon, getProductName, getUserName, loading } = useApp();
-  const { t, tData } = useLanguage();
+  const { t, lang } = useLanguage();
 
   if (loading) {
     return (
@@ -22,20 +22,18 @@ export default function Dashboard() {
   const lowCount = activeAlerts.filter(a => a.alertType === 'low_stock').length;
   const expiryCount = activeAlerts.filter(a => a.alertType === 'expiry_warning').length;
 
-  // Dept stock counts (by unique item count)
   const totalProducts = products.length || 1;
   const deptStockSummary = departments.map(dept => {
     const deptProducts = products.filter(p => p.deptId === dept.id);
     return { ...dept, productCount: deptProducts.length };
   });
 
-  // Recent activities (merge transfers + waste, sort by date)
   const activities = [
     ...transfersList.slice(0, 5).map(t_activity => ({
       type: 'transfer',
       icon: '🔄',
       iconBg: 'var(--color-info-bg)',
-      text: `<strong>${getProductName(t_activity.productId)}</strong> — ${t_activity.quantity} ${t('common.unknown')} ${tData(getDeptName(t_activity.fromDeptId), 'departments')} → ${tData(getDeptName(t_activity.toDeptId), 'departments')}`,
+      text: `<strong>${getProductName(t_activity.productId)}</strong> — ${t_activity.quantity} ${t('common.unknown')} ${getDeptName(t_activity.fromDeptId, lang)} → ${getDeptName(t_activity.toDeptId, lang)}`,
       time: t_activity.transferredAt,
       user: getUserName(t_activity.transferredBy),
     })),
@@ -56,7 +54,6 @@ export default function Dashboard() {
         <p>{t('dashboard.subtitle')}</p>
       </div>
 
-      {/* ═══ Stats Grid ═══ */}
       <div className="stats-grid">
         <Link href="/urunler" className="stat-card" style={{ '--card-accent': 'var(--accent-primary)', textDecoration: 'none' }}>
           <div className="stat-card-header">
@@ -102,9 +99,7 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* ═══ Charts + Activity ═══ */}
       <div className="content-grid">
-        {/* Bar Chart */}
         <div className="content-card">
           <div className="content-card-header">
             <div>
@@ -130,16 +125,14 @@ export default function Dashboard() {
                   
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '0.2px' }}>{tData(dept.name, 'departments')}</span>
+                      <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '0.2px' }}>{dept[`name_${lang}`] || dept.name_en}</span>
                       <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                         <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>%{percentage}</span>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '500' }}>({dept.productCount} {t('dashboard.product')})</span>
                       </div>
                     </div>
                     
-                    {/* Track Background */}
                     <div style={{ width: '100%', height: '8px', background: 'var(--border-color)', borderRadius: '20px', position: 'relative' }}>
-                      {/* Active Progress */}
                       <div style={{ 
                         height: '100%', width: `${percentage}%`, 
                         background: `linear-gradient(90deg, ${dept.color}, ${dept.color}dd)`,
@@ -155,7 +148,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity */}
         <div className="content-card">
           <div className="content-card-header">
             <h3>{t('dashboard.recentActivity')}</h3>
@@ -176,7 +168,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ Alerts Panel ═══ */}
       {activeAlerts.length > 0 && (
         <div className="content-card">
           <div className="content-card-header">
@@ -193,10 +184,10 @@ export default function Dashboard() {
               let icon = '⏰'; let cls = 'warning'; let desc = '';
               if (isCritical) {
                 icon = '🚨'; cls = 'critical';
-                desc = `${t('dashboard.stockCritical')}: ${product?.quantity} ${tData(product?.unit, 'units')} (${t('dashboard.threshold')}: ${product?.criticalThreshold})`;
+                desc = `${t('dashboard.stockCritical')}: ${product?.quantity} ${product?.[`unit_${lang}`] || product?.unit_en} (${t('dashboard.threshold')}: ${product?.criticalThreshold})`;
               } else if (isLow) {
                 icon = '⚠️'; cls = 'warning';
-                desc = `${t('dashboard.stockLow')}: ${product?.quantity} ${tData(product?.unit, 'units')} (${t('dashboard.thresholdApproaching')}: ${product?.criticalThreshold})`;
+                desc = `${t('dashboard.stockLow')}: ${product?.quantity} ${product?.[`unit_${lang}`] || product?.unit_en} (${t('dashboard.thresholdApproaching')}: ${product?.criticalThreshold})`;
               } else if (isExpiry) {
                 icon = '⏰'; cls = 'warning';
                 desc = `${t('dashboard.expiryApproaching')}: ${product?.expiryDate}`;

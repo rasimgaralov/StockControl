@@ -169,9 +169,9 @@ export default function TransferlerPage() {
                   <div className="activity-text">
                     <strong style={{ color: 'var(--text-primary)' }}>{getProductName(tItem.productId)}</strong>
                     {' '} — {tItem.quantity} {t('common.unknown').replace('Unknown', 'units').replace('غير معروف', 'وحدة')}: {' '}
-                    <span style={{ color: 'var(--text-muted)' }}>{tData(getDeptName(tItem.fromDeptId), 'departments')}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{getDeptName(tItem.fromDeptId, lang)}</span>
                     <span style={{ color: 'var(--accent-secondary)', margin: '0 4px' }}>→</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{tData(getDeptName(tItem.toDeptId), 'departments')}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{getDeptName(tItem.toDeptId, lang)}</span>
                   </div>
                   <div className="activity-time">{getUserName(tItem.transferredBy)} • {formatDateTime(tItem.transferredAt)}</div>
                 </div>
@@ -188,7 +188,7 @@ export default function TransferlerPage() {
             <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
               <option value="all">{t('productsPage.allDepartments')}</option>
               {departments.map(d => (
-                <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+                <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
               ))}
             </select>
           </div>
@@ -264,13 +264,13 @@ export default function TransferlerPage() {
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{getProductName(tItem.productId)}</td>
                     <td>
                       <span className="badge badge-purple">
-                        {getDeptIcon(tItem.fromDeptId)} {tData(getDeptName(tItem.fromDeptId), 'departments')}
+                        {getDeptIcon(tItem.fromDeptId)} {getDeptName(tItem.fromDeptId, lang)}
                       </span>
                     </td>
                     <td style={{ fontSize: '18px', color: 'var(--accent-secondary)', textAlign: 'center' }}>→</td>
                     <td>
                       <span className="badge badge-info">
-                        {getDeptIcon(tItem.toDeptId)} {tData(getDeptName(tItem.toDeptId), 'departments')}
+                        {getDeptIcon(tItem.toDeptId)} {getDeptName(tItem.toDeptId, lang)}
                       </span>
                     </td>
                     <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{tItem.quantity}</td>
@@ -300,7 +300,7 @@ export default function TransferlerPage() {
               <label className="form-label">{t('transfersPage.sourceLabel')}</label>
               <select className="form-select" value={formData.fromDeptId} disabled style={{ backgroundColor: 'var(--bg-surface-hover)', cursor: 'not-allowed' }}>
                 {departments.filter(d => d.id === formData.fromDeptId).map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+                  <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
                 ))}
               </select>
             </div>
@@ -314,7 +314,7 @@ export default function TransferlerPage() {
                 setProductSearch(defaultProd?.name || '');
               }}>
                 {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+                  <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
                 ))}
               </select>
             </div>
@@ -365,7 +365,7 @@ export default function TransferlerPage() {
                         onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface-hover)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = formData.productId === p.id ? 'var(--bg-surface-hover)' : 'transparent'}
                       >
-                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>({p.quantity} {tData(p.unit, 'units')})</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</span> <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>({p.quantity} {(p[`unit_${lang}`] || p.unit_en)})</span>
                       </li>
                     ))
                   )}

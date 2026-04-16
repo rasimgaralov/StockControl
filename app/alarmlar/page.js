@@ -158,10 +158,10 @@ function AlarmlarContent() {
               let icon = '⏰'; let cls = 'warning'; let desc = '';
               if (isCritical) {
                 icon = '🚨'; cls = 'critical';
-                desc = `${t('alarmsPage.descCritical')}: ${product?.quantity} ${tData(product?.unit, 'units')} (${t('alarmsPage.threshold')}: ${product?.criticalThreshold})`;
+                desc = `${t('alarmsPage.descCritical')}: ${product?.quantity} ${(product?.[`unit_${lang}`] || product?.unit_en)} (${t('alarmsPage.threshold')}: ${product?.criticalThreshold})`;
               } else if (isLow) {
                 icon = '⚠️'; cls = 'warning';
-                desc = `${t('alarmsPage.descLow')}: ${product?.quantity} ${tData(product?.unit, 'units')} (${t('alarmsPage.thresholdApproaching')}: ${product?.criticalThreshold})`;
+                desc = `${t('alarmsPage.descLow')}: ${product?.quantity} ${(product?.[`unit_${lang}`] || product?.unit_en)} (${t('alarmsPage.thresholdApproaching')}: ${product?.criticalThreshold})`;
               } else if (isExpiry) {
                 icon = '⏰'; cls = 'warning';
                 desc = `${t('alarmsPage.descExpiry')}: ${product?.expiryDate}`;
@@ -217,10 +217,10 @@ function AlarmlarContent() {
           <form onSubmit={saveStock}>
             <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '14px' }}>
               {t('alarmsPage.editModalDesc1')} <strong>{editingProduct.name}</strong>.
-              {t('alarmsPage.editModalDesc2')} <strong>{editingProduct.criticalThreshold} {tData(editingProduct.unit, 'units')}</strong>
+              {t('alarmsPage.editModalDesc2')} <strong>{editingProduct.criticalThreshold} {(editingProduct[`unit_${lang}`] || editingProduct.unit_en)}</strong>
             </p>
             <div className="form-group">
-              <label className="form-label">{t('alarmsPage.newQuantity')} ({tData(editingProduct.unit, 'units')})</label>
+              <label className="form-label">{t('alarmsPage.newQuantity')} ({(editingProduct[`unit_${lang}`] || editingProduct.unit_en)})</label>
               <input
                 className="form-input"
                 type="number"

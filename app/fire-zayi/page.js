@@ -128,11 +128,11 @@ export default function FireZayiPage() {
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{getProductName(w.productId)}</td>
                     <td>
                       <span className="badge badge-purple">
-                        {getDeptIcon(w.deptId)} {tData(getDeptName(w.deptId), 'departments')}
+                        {getDeptIcon(w.deptId)} {getDeptName(w.deptId, lang)}
                       </span>
                     </td>
                     <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>-{w.quantity}</td>
-                    <td style={{ maxWidth: '250px' }}>{tData(w.reason, 'reasons')}</td>
+                    <td style={{ maxWidth: '250px' }}>{(w[`reason_${lang}`] || w.reason_en)}</td>
                     <td>{getUserName(w.loggedBy)}</td>
                   </tr>
                 ))
@@ -149,7 +149,7 @@ export default function FireZayiPage() {
             <label className="form-label">{t('wastePage.productLabel')}</label>
             <select className="form-select" value={formData.productId} onChange={(e) => setFormData({ ...formData, productId: e.target.value })}>
               {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.quantity} {tData(p.unit, 'units')})</option>
+                <option key={p.id} value={p.id}>{p.name} ({p.quantity} {(p[`unit_${lang}`] || p.unit_en)})</option>
               ))}
             </select>
           </div>
@@ -158,7 +158,7 @@ export default function FireZayiPage() {
               <label className="form-label">{t('wastePage.deptLabel')}</label>
               <select className="form-select" value={formData.deptId} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })}>
                 {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+                  <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
                 ))}
               </select>
             </div>

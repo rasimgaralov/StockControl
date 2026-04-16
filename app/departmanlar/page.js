@@ -94,7 +94,7 @@ export default function DepartmanlarPage() {
       {selectedDeptData && (
         <div className="content-card slide-up">
           <div className="content-card-header">
-            <h3>{selectedDeptData.icon} {tData(selectedDeptData.name, 'departments')} — {t('departmentsPage.detailTitle')}</h3>
+            <h3>{selectedDeptData.icon} {(selectedDeptData[`name_${lang}`] || selectedDeptData.name_en)} — {t('departmentsPage.detailTitle')}</h3>
             <span className="badge badge-purple">{selectedDeptData.productCount} {t('departmentsPage.products')}</span>
           </div>
           <div className="data-table-wrapper">
@@ -129,7 +129,7 @@ export default function DepartmanlarPage() {
                           fontWeight: 700,
                           color: status === 'critical' ? 'var(--color-danger)' : status === 'warning' ? 'var(--color-warning)' : 'var(--text-primary)'
                         }}>{p.quantity}</td>
-                        <td>{tData(p.unit, 'units')}</td>
+                        <td>{(p[`unit_${lang}`] || p.unit_en)}</td>
                         <td>{p.criticalThreshold}</td>
                         <td>{formatDate(p.expiryDate)}</td>
                         <td>
