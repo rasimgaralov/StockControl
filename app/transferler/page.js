@@ -24,10 +24,14 @@ export default function TransferlerPage() {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const filteredModalProducts = useMemo(() => {
-    if (!productSearch || !showDropdown) return products;
+    let result = products;
+    if (formData.toDeptId) {
+      result = result.filter(p => p.deptId === formData.toDeptId);
+    }
+    if (!productSearch || !showDropdown) return result;
     const q = productSearch.toLowerCase();
-    return products.filter(p => p.name.toLowerCase().includes(q));
-  }, [products, productSearch, showDropdown]);
+    return result.filter(p => p.name.toLowerCase().includes(q));
+  }, [products, productSearch, showDropdown, formData.toDeptId]);
 
   const filtered = useMemo(() => {
     let result = transfersList;
@@ -48,11 +52,15 @@ export default function TransferlerPage() {
   }, [transfersList, filterDept, startDate, endDate]);
 
   const openModal = () => {
-    const defaultProduct = products[0];
+    const defaultFromDeptId = departments.find(d => d.name === 'Depo' || d.name === 'Warehouse')?.id || departments[0]?.id || '';
+    const defaultToDeptId = departments[0]?.id || '';
+    const deptProducts = products.filter(p => p.deptId === defaultToDeptId);
+    const defaultProduct = deptProducts[0];
+
     setFormData({
       productId: defaultProduct?.id || '',
-      fromDeptId: departments.find(d => d.name === 'Depo')?.id || departments[0]?.id || '',
-      toDeptId: departments[0]?.id || '',
+      fromDeptId: defaultFromDeptId,
+      toDeptId: defaultToDeptId,
       quantity: ''
     });
     setProductSearch(defaultProduct?.name || '');
@@ -257,6 +265,30 @@ export default function TransferlerPage() {
               </div>
             </div>
           )}
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">{t('transfersPage.sourceLabel')}</label>
+              <select className="form-select" value={formData.fromDeptId} disabled style={{ backgroundColor: 'var(--bg-surface-hover)', cursor: 'not-allowed' }}>
+                {departments.filter(d => d.id === formData.fromDeptId).map(d => (
+                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('transfersPage.targetLabel')}</label>
+              <select className="form-select" value={formData.toDeptId} onChange={(e) => {
+                const selectedDeptId = e.target.value;
+                const deptProducts = products.filter(p => p.deptId === selectedDeptId);
+                const defaultProd = deptProducts[0];
+                setFormData({ ...formData, toDeptId: selectedDeptId, productId: defaultProd?.id || '' });
+                setProductSearch(defaultProd?.name || '');
+              }}>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="form-group" style={{ position: 'relative' }}>
             <label className="form-label">{t('transfersPage.productLabel')}</label>
             <div style={{ position: 'relative' }}>
@@ -309,24 +341,6 @@ export default function TransferlerPage() {
                   )}
                 </ul>
               )}
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">{t('transfersPage.sourceLabel')}</label>
-              <select className="form-select" value={formData.fromDeptId} onChange={(e) => setFormData({ ...formData, fromDeptId: e.target.value })}>
-                {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">{t('transfersPage.targetLabel')}</label>
-              <select className="form-select" value={formData.toDeptId} onChange={(e) => setFormData({ ...formData, toDeptId: e.target.value })}>
-                {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
-                ))}
-              </select>
             </div>
           </div>
           <div className="form-group">
