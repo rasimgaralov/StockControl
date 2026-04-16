@@ -146,24 +146,6 @@ export default function TransferlerPage() {
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="toolbar" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ flex: 1, minWidth: '200px' }}>
-          <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-            <option value="all">{t('productsPage.allDepartments')}</option>
-            {departments.map(d => (
-              <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
-            ))}
-          </select>
-        </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('transfersPage.dateRange')}</span>
-          <input className="form-input" style={{ width: '140px', background: 'var(--bg-surface)' }} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          <span style={{ color: 'var(--text-muted)' }}>-</span>
-          <input className="form-input" style={{ width: '140px', background: 'var(--bg-surface)' }} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-        </div>
-      </div>
-
       {/* Today's Filters / Today's History */}
       <div className="content-card" style={{ border: '1px solid var(--accent-primary)', boxShadow: 'var(--shadow-glow)' }}>
         <div className="content-card-header">
@@ -195,6 +177,24 @@ export default function TransferlerPage() {
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="toolbar" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ flex: 1, minWidth: '200px' }}>
+          <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
+            <option value="all">{t('productsPage.allDepartments')}</option>
+            {departments.map(d => (
+              <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('transfersPage.dateRange')}</span>
+          <input className="form-input" style={{ width: '140px', background: 'var(--bg-surface)' }} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          <span style={{ color: 'var(--text-muted)' }}>-</span>
+          <input className="form-input" style={{ width: '140px', background: 'var(--bg-surface)' }} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </div>
       </div>
 
