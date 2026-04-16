@@ -43,6 +43,8 @@ export default function IslemGecmisiPage() {
   const [loading, setLoading] = useState(true);
   const [filterAction, setFilterAction] = useState('all');
   const [filterUser, setFilterUser] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -67,8 +69,18 @@ export default function IslemGecmisiPage() {
     if (filterUser !== 'all') {
       result = result.filter(l => l.userId === filterUser);
     }
+    if (startDate) {
+      const sDate = new Date(startDate);
+      sDate.setHours(0,0,0,0);
+      result = result.filter(l => new Date(l.createdAt) >= sDate);
+    }
+    if (endDate) {
+      const eDate = new Date(endDate);
+      eDate.setHours(23,59,59,999);
+      result = result.filter(l => new Date(l.createdAt) <= eDate);
+    }
     return result;
-  }, [logs, filterAction, filterUser]);
+  }, [logs, filterAction, filterUser, startDate, endDate]);
 
   const getTargetTypeLabel = (type) => {
     const labels = {
@@ -151,21 +163,47 @@ export default function IslemGecmisiPage() {
       </div>
 
       {/* Filters */}
-      <div className="toolbar">
-        <select className="filter-select" value={filterAction} onChange={(e) => setFilterAction(e.target.value)}>
-          <option value="all">{t('activityPage.allActions')}</option>
-          <option value="add">{t('activityPage.actionAdd')}</option>
-          <option value="edit">{t('activityPage.actionEdit')}</option>
-          <option value="delete">{t('activityPage.actionDelete')}</option>
-          <option value="transfer">{t('activityPage.actionTransfer')}</option>
-          <option value="waste">{t('activityPage.actionWaste')}</option>
-        </select>
-        <select className="filter-select" value={filterUser} onChange={(e) => setFilterUser(e.target.value)}>
-          <option value="all">{t('activityPage.allUsers')}</option>
-          {users.map(u => (
-            <option key={u.id} value={u.id}>{u.name}</option>
-          ))}
-        </select>
+      <div className="toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <select className="filter-select" style={{ minWidth: '150px' }} value={filterAction} onChange={(e) => setFilterAction(e.target.value)}>
+            <option value="all">{t('activityPage.allActions')}</option>
+            <option value="add">{t('activityPage.actionAdd')}</option>
+            <option value="edit">{t('activityPage.actionEdit')}</option>
+            <option value="delete">{t('activityPage.actionDelete')}</option>
+            <option value="transfer">{t('activityPage.actionTransfer')}</option>
+            <option value="waste">{t('activityPage.actionWaste')}</option>
+          </select>
+          <select className="filter-select" style={{ minWidth: '150px' }} value={filterUser} onChange={(e) => setFilterUser(e.target.value)}>
+            <option value="all">{t('activityPage.allUsers')}</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('transfersPage.dateRange') || "Tarih Aralığı:"}</span>
+          <input 
+            className="form-input" 
+            style={{ width: '140px', background: 'var(--bg-surface)' }} 
+            type={startDate ? "date" : "text"} 
+            placeholder="Select Date"
+            onFocus={(e) => e.target.type = 'date'}
+            onBlur={(e) => { if (!startDate) e.target.type = 'text'; }}
+            value={startDate} 
+            onChange={(e) => setStartDate(e.target.value)} 
+          />
+          <span style={{ color: 'var(--text-muted)' }}>-</span>
+          <input 
+            className="form-input" 
+            style={{ width: '140px', background: 'var(--bg-surface)' }} 
+            type={endDate ? "date" : "text"} 
+            placeholder="Select Date"
+            onFocus={(e) => e.target.type = 'date'}
+            onBlur={(e) => { if (!endDate) e.target.type = 'text'; }}
+            value={endDate} 
+            onChange={(e) => setEndDate(e.target.value)} 
+          />
+        </div>
       </div>
 
       {/* Logs Table */}
