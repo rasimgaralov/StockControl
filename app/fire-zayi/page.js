@@ -2,11 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
-import { getDeptName, getDeptIcon, getProductName, getUserName, formatDateTime } from '@/data/mockData';
+import { useLanguage } from '@/context/LanguageContext';
+import { formatDateTime } from '@/data/mockData';
 import Modal from '@/components/Modal';
 
 export default function FireZayiPage() {
-  const { products, departments, wasteLogsList, addWasteLog } = useApp();
+  const { products, departments, wasteLogsList, addWasteLog, getProductName, getDeptName, getDeptIcon, getUserName, loading } = useApp();
+  const { t, tData } = useLanguage();
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,16 +45,25 @@ export default function FireZayiPage() {
     setShowModal(false);
   };
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>{t('wastePage.loading')}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="slide-up">
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h2>Fire / Zayi</h2>
-            <p>Kayıp ve fire takibi</p>
+            <h2>{t('wastePage.title')}</h2>
+            <p>{t('wastePage.subtitle')}</p>
           </div>
           <button className="btn btn-primary" onClick={openModal}>
-            ➕ Yeni Fire Kaydı
+            ➕ {t('wastePage.newRecord')}
           </button>
         </div>
       </div>
@@ -64,40 +75,40 @@ export default function FireZayiPage() {
             <div className="stat-card-icon red">🗑️</div>
           </div>
           <div className="stat-card-value">{wasteLogsList.length}</div>
-          <div className="stat-card-label">Toplam Fire Kaydı</div>
+          <div className="stat-card-label">{t('wastePage.totalLogs')}</div>
         </div>
         <div className="stat-card" style={{ '--card-accent': 'var(--color-warning)' }}>
           <div className="stat-card-header">
             <div className="stat-card-icon yellow">📊</div>
           </div>
           <div className="stat-card-value">{totalWaste}</div>
-          <div className="stat-card-label">Toplam Fire Miktarı</div>
+          <div className="stat-card-label">{t('wastePage.totalAmount')}</div>
         </div>
         <div className="stat-card" style={{ '--card-accent': 'var(--accent-primary)' }}>
           <div className="stat-card-header">
             <div className="stat-card-icon purple">🏢</div>
           </div>
           <div className="stat-card-value">{Object.keys(wasteByDept).length}</div>
-          <div className="stat-card-label">Etkilenen Departman</div>
+          <div className="stat-card-label">{t('wastePage.affectedDepts')}</div>
         </div>
       </div>
 
       {/* Table */}
       <div className="content-card">
         <div className="content-card-header">
-          <h3>Fire Geçmişi</h3>
-          <span className="badge badge-danger">{wasteLogsList.length} kayıt</span>
+          <h3>{t('wastePage.historyTitle')}</h3>
+          <span className="badge badge-danger">{wasteLogsList.length} {t('wastePage.historyCount')}</span>
         </div>
         <div className="data-table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Tarih</th>
-                <th>Ürün</th>
-                <th>Departman</th>
-                <th>Miktar</th>
-                <th>Sebep</th>
-                <th>Kaydeden</th>
+                <th>{t('wastePage.table.date')}</th>
+                <th>{t('wastePage.table.product')}</th>
+                <th>{t('wastePage.table.dept')}</th>
+                <th>{t('wastePage.table.amount')}</th>
+                <th>{t('wastePage.table.reason')}</th>
+                <th>{t('wastePage.table.user')}</th>
               </tr>
             </thead>
             <tbody>
@@ -106,7 +117,7 @@ export default function FireZayiPage() {
                   <td colSpan={6}>
                     <div className="empty-state">
                       <div className="empty-state-icon">✅</div>
-                      <div className="empty-state-text">Fire kaydı bulunamadı</div>
+                      <div className="empty-state-text">{t('wastePage.emptyState')}</div>
                     </div>
                   </td>
                 </tr>
@@ -117,11 +128,11 @@ export default function FireZayiPage() {
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{getProductName(w.productId)}</td>
                     <td>
                       <span className="badge badge-purple">
-                        {getDeptIcon(w.deptId)} {getDeptName(w.deptId)}
+                        {getDeptIcon(w.deptId)} {tData(getDeptName(w.deptId), 'departments')}
                       </span>
                     </td>
                     <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>-{w.quantity}</td>
-                    <td style={{ maxWidth: '250px' }}>{w.reason}</td>
+                    <td style={{ maxWidth: '250px' }}>{tData(w.reason, 'reasons')}</td>
                     <td>{getUserName(w.loggedBy)}</td>
                   </tr>
                 ))
@@ -132,37 +143,37 @@ export default function FireZayiPage() {
       </div>
 
       {/* Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Yeni Fire Kaydı">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('wastePage.modalTitle')}>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Ürün</label>
+            <label className="form-label">{t('wastePage.productLabel')}</label>
             <select className="form-select" value={formData.productId} onChange={(e) => setFormData({ ...formData, productId: e.target.value })}>
               {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.quantity} {p.unit})</option>
+                <option key={p.id} value={p.id}>{p.name} ({p.quantity} {tData(p.unit, 'units')})</option>
               ))}
             </select>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Departman</label>
+              <label className="form-label">{t('wastePage.deptLabel')}</label>
               <select className="form-select" value={formData.deptId} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })}>
                 {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {d.name}</option>
+                  <option key={d.id} value={d.id}>{d.icon} {tData(d.name, 'departments')}</option>
                 ))}
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Miktar</label>
+              <label className="form-label">{t('wastePage.amountLabel')}</label>
               <input className="form-input" type="number" required min="1" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Sebep</label>
-            <textarea className="form-textarea" required value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} placeholder="Fire sebebini açıklayın..." />
+            <label className="form-label">{t('wastePage.reasonLabel')}</label>
+            <textarea className="form-textarea" required value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} placeholder={t('wastePage.reasonPlaceholder')} />
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>İptal</button>
-            <button type="submit" className="btn btn-primary">Kaydet</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
+            <button type="submit" className="btn btn-primary">{t('wastePage.saveBtn')}</button>
           </div>
         </form>
       </Modal>

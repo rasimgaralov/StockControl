@@ -2,17 +2,23 @@
 
 import { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
-import { getDeptName, getStockStatus, formatDate } from '@/data/mockData';
+import { getStockStatus, formatDate } from '@/data/mockData';
 import Modal from '@/components/Modal';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function UrunlerPage() {
-  const { products, departments, addProduct, updateProduct, deleteProduct } = useApp();
+  const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading } = useApp();
+  const { t, tData } = useLanguage();
 
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -20,6 +26,9 @@ export default function UrunlerPage() {
   const [formData, setFormData] = useState({
     name: '', quantity: '', unit: 'kg', supplier: '', expiryDate: '', criticalThreshold: '', deptId: ''
   });
+
+  // Today's date for 'min' attribute in YYYY-MM-DD format based on local timezone
+  const todayDateStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
   // Filter & Sort
   const filteredProducts = useMemo(() => {
@@ -54,6 +63,11 @@ export default function UrunlerPage() {
 
     return result;
   }, [products, search, filterDept, filterStatus, sortBy, sortDir]);
+
+  // Reset page when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [search, filterDept, filterStatus, sortBy, sortDir]);
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -102,21 +116,37 @@ export default function UrunlerPage() {
 
   const getStatusBadge = (product) => {
     const status = getStockStatus(product);
-    if (status === 'critical') return <span className="badge badge-danger">Kritik</span>;
-    if (status === 'warning') return <span className="badge badge-warning">Düşük</span>;
-    return <span className="badge badge-success">Normal</span>;
+    if (status === 'critical') return <span className="badge badge-danger">{t('productsPage.status.critical')}</span>;
+    if (status === 'warning') return <span className="badge badge-warning">{t('productsPage.status.warning')}</span>;
+    return <span className="badge badge-success">{t('productsPage.status.normal')}</span>;
   };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>{t('dashboard.preparing')}</p>
+      </div>
+    );
+  }
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const displayedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="slide-up">
       <div className="page-header">
         <div className="page-header-row">
           <div>
-            <h2>Ürünler</h2>
-            <p>{products.length} ürün kayıtlı</p>
+            <h2>{t('productsPage.title')}</h2>
+            <p>
+              {filterDept === 'all' 
+                ? `${products.length} ${t('productsPage.productsRegistered')}` 
+                : `${t('productsPage.productsListedIn')} ${getDeptName(filterDept)}: ${filteredProducts.length}`}
+            </p>
           </div>
           <button className="btn btn-primary" onClick={openAddModal}>
-            ➕ Yeni Ürün
+            ➕ {t('productsPage.newProduct')}
           </button>
         </div>
       </div>
@@ -127,22 +157,22 @@ export default function UrunlerPage() {
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Ürün veya tedarikçi ara..."
+            placeholder={t('productsPage.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <select className="filter-select" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-          <option value="all">Tüm Departmanlar</option>
+          <option value="all">{t('productsPage.allDepartments')}</option>
           {departments.map(d => (
             <option key={d.id} value={d.id}>{d.icon} {d.name}</option>
           ))}
         </select>
         <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-          <option value="all">Tüm Durumlar</option>
-          <option value="critical">Kritik</option>
-          <option value="warning">Düşük</option>
-          <option value="normal">Normal</option>
+          <option value="all">{t('productsPage.allStatuses')}</option>
+          <option value="critical">{t('productsPage.status.critical')}</option>
+          <option value="warning">{t('productsPage.status.warning')}</option>
+          <option value="normal">{t('productsPage.status.normal')}</option>
         </select>
       </div>
 
@@ -153,19 +183,19 @@ export default function UrunlerPage() {
             <thead>
               <tr>
                 <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
-                  Ürün Adı {sortBy === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
+                  {t('productsPage.table.productName')} {sortBy === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
                 </th>
                 <th onClick={() => handleSort('quantity')} style={{ cursor: 'pointer' }}>
-                  Miktar {sortBy === 'quantity' && (sortDir === 'asc' ? '↑' : '↓')}
+                  {t('productsPage.table.quantity')} {sortBy === 'quantity' && (sortDir === 'asc' ? '↑' : '↓')}
                 </th>
-                <th>Birim</th>
-                <th>Tedarikçi</th>
-                <th>Departman</th>
+                <th>{t('productsPage.table.unit')}</th>
+                <th>{t('productsPage.table.supplier')}</th>
+                <th>{t('productsPage.table.department')}</th>
                 <th onClick={() => handleSort('expiry')} style={{ cursor: 'pointer' }}>
-                  SKT {sortBy === 'expiry' && (sortDir === 'asc' ? '↑' : '↓')}
+                  {t('productsPage.table.expiry')} {sortBy === 'expiry' && (sortDir === 'asc' ? '↑' : '↓')}
                 </th>
-                <th>Durum</th>
-                <th>İşlem</th>
+                <th>{t('productsPage.table.status')}</th>
+                <th>{t('productsPage.table.action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -174,12 +204,12 @@ export default function UrunlerPage() {
                   <td colSpan={8}>
                     <div className="empty-state">
                       <div className="empty-state-icon">📭</div>
-                      <div className="empty-state-text">Sonuç bulunamadı</div>
+                      <div className="empty-state-text">{t('productsPage.noResults')}</div>
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map(p => (
+                displayedProducts.map(p => (
                   <tr key={p.id}>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</td>
                     <td style={{
@@ -188,9 +218,9 @@ export default function UrunlerPage() {
                     }}>
                       {p.quantity}
                     </td>
-                    <td>{p.unit}</td>
-                    <td>{p.supplier}</td>
-                    <td><span className="badge badge-purple">{getDeptName(p.deptId)}</span></td>
+                    <td>{tData(p.unit, 'units')}</td>
+                    <td>{tData(p.supplier, 'suppliers')}</td>
+                    <td><span className="badge badge-purple">{tData(getDeptName(p.deptId), 'departments')}</span></td>
                     <td>{formatDate(p.expiryDate)}</td>
                     <td>{getStatusBadge(p)}</td>
                     <td>
@@ -205,26 +235,47 @@ export default function UrunlerPage() {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button 
+              className="page-btn" 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            >
+              {t('productsPage.pagePrevious')}
+            </button>
+            <span className="page-info">{t('productsPage.pageNumber')} {currentPage} / {totalPages}</span>
+            <button 
+              className="page-btn" 
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            >
+              {t('productsPage.pageNext')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Modal */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title={editProduct ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}
+        title={editProduct ? t('productsPage.editTitle') : t('productsPage.addTitle')}
       >
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Ürün Adı</label>
-            <input className="form-input" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Ürün adını girin" />
+            <label className="form-label">{t('productsPage.nameLabel')}</label>
+            <input className="form-input" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder={t('productsPage.namePlaceholder')} />
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Miktar</label>
+              <label className="form-label">{t('productsPage.qtyLabel')}</label>
               <input className="form-input" type="number" required min="0" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
             </div>
             <div className="form-group">
-              <label className="form-label">Birim</label>
+              <label className="form-label">{t('productsPage.unitLabel')}</label>
               <select className="form-select" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })}>
                 <option value="kg">kg</option>
                 <option value="litre">litre</option>
@@ -234,21 +285,27 @@ export default function UrunlerPage() {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Tedarikçi</label>
-            <input className="form-input" required value={formData.supplier} onChange={(e) => setFormData({ ...formData, supplier: e.target.value })} placeholder="Tedarikçi firma adı" />
+            <label className="form-label">{t('productsPage.supplierLabel')}</label>
+            <input className="form-input" required value={formData.supplier} onChange={(e) => setFormData({ ...formData, supplier: e.target.value })} placeholder={t('productsPage.supplierPlaceholder')} />
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Son Kullanma Tarihi</label>
-              <input className="form-input" type="date" value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} />
+              <label className="form-label">{t('productsPage.expiryLabel')}</label>
+              <input 
+                className="form-input" 
+                type="date" 
+                min={todayDateStr}
+                value={formData.expiryDate} 
+                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} 
+              />
             </div>
             <div className="form-group">
-              <label className="form-label">Kritik Eşik</label>
+              <label className="form-label">{t('productsPage.thresholdLabel')}</label>
               <input className="form-input" type="number" required min="0" value={formData.criticalThreshold} onChange={(e) => setFormData({ ...formData, criticalThreshold: e.target.value })} />
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Departman</label>
+            <label className="form-label">{t('productsPage.deptLabel')}</label>
             <select className="form-select" value={formData.deptId} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })}>
               {departments.map(d => (
                 <option key={d.id} value={d.id}>{d.icon} {d.name}</option>
@@ -256,8 +313,8 @@ export default function UrunlerPage() {
             </select>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>İptal</button>
-            <button type="submit" className="btn btn-primary">{editProduct ? 'Güncelle' : 'Ekle'}</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>{t('common.cancel')}</button>
+            <button type="submit" className="btn btn-primary">{editProduct ? t('productsPage.updateBtn') : t('common.add')}</button>
           </div>
         </form>
       </Modal>

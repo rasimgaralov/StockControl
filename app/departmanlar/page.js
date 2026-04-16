@@ -2,10 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
-import { getProductName, getStockStatus, formatDate } from '@/data/mockData';
+import { useLanguage } from '@/context/LanguageContext';
+import { getStockStatus, formatDate } from '@/data/mockData';
 
 export default function DepartmanlarPage() {
-  const { departments, products, deptStockList } = useApp();
+  const { departments, products, deptStockList, getProductName, loading } = useApp();
+  const { t, tData } = useLanguage();
   const [selectedDept, setSelectedDept] = useState(null);
 
   const deptSummaries = useMemo(() => {
@@ -25,11 +27,20 @@ export default function DepartmanlarPage() {
 
   const selectedDeptData = deptSummaries.find(d => d.id === selectedDept);
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>{t('departmentsPage.loading')}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="slide-up">
       <div className="page-header">
-        <h2>Departmanlar</h2>
-        <p>Departman bazlı stok durumunu görüntüleyin</p>
+        <h2>{t('departmentsPage.title')}</h2>
+        <p>{t('departmentsPage.subtitle')}</p>
       </div>
 
       {/* Department Cards Grid */}
@@ -49,20 +60,20 @@ export default function DepartmanlarPage() {
                 {dept.icon}
               </div>
               <div>
-                <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>{dept.name}</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dept.productCount} ürün</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>{tData(dept.name, 'departments')}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dept.productCount} {t('departmentsPage.products')}</div>
               </div>
             </div>
             <div className="dept-card-stats">
               <div className="dept-stat">
                 <div className="dept-stat-value">{dept.totalQty}</div>
-                <div className="dept-stat-label">Toplam Stok</div>
+                <div className="dept-stat-label">{t('departmentsPage.totalStock')}</div>
               </div>
               <div className="dept-stat">
                 <div className="dept-stat-value" style={{ color: dept.criticalCount > 0 ? 'var(--color-danger)' : 'var(--color-success)' }}>
                   {dept.criticalCount}
                 </div>
-                <div className="dept-stat-label">Kritik Ürün</div>
+                <div className="dept-stat-label">{t('departmentsPage.criticalProduct')}</div>
               </div>
             </div>
             {dept.criticalCount > 0 && (
@@ -83,19 +94,19 @@ export default function DepartmanlarPage() {
       {selectedDeptData && (
         <div className="content-card slide-up">
           <div className="content-card-header">
-            <h3>{selectedDeptData.icon} {selectedDeptData.name} — Stok Detayı</h3>
-            <span className="badge badge-purple">{selectedDeptData.productCount} ürün</span>
+            <h3>{selectedDeptData.icon} {tData(selectedDeptData.name, 'departments')} — {t('departmentsPage.detailTitle')}</h3>
+            <span className="badge badge-purple">{selectedDeptData.productCount} {t('departmentsPage.products')}</span>
           </div>
           <div className="data-table-wrapper">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Ürün</th>
-                  <th>Miktar</th>
-                  <th>Birim</th>
-                  <th>Kritik Eşik</th>
-                  <th>SKT</th>
-                  <th>Durum</th>
+                  <th>{t('departmentsPage.table.product')}</th>
+                  <th>{t('departmentsPage.table.quantity')}</th>
+                  <th>{t('departmentsPage.table.unit')}</th>
+                  <th>{t('departmentsPage.table.criticalThreshold')}</th>
+                  <th>{t('departmentsPage.table.expiry')}</th>
+                  <th>{t('departmentsPage.table.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,7 +115,7 @@ export default function DepartmanlarPage() {
                     <td colSpan={6}>
                       <div className="empty-state">
                         <div className="empty-state-icon">📭</div>
-                        <div className="empty-state-text">Bu departmanda ürün yok</div>
+                        <div className="empty-state-text">{t('departmentsPage.emptyState')}</div>
                       </div>
                     </td>
                   </tr>
@@ -118,13 +129,13 @@ export default function DepartmanlarPage() {
                           fontWeight: 700,
                           color: status === 'critical' ? 'var(--color-danger)' : status === 'warning' ? 'var(--color-warning)' : 'var(--text-primary)'
                         }}>{p.quantity}</td>
-                        <td>{p.unit}</td>
+                        <td>{tData(p.unit, 'units')}</td>
                         <td>{p.criticalThreshold}</td>
                         <td>{formatDate(p.expiryDate)}</td>
                         <td>
-                          {status === 'critical' && <span className="badge badge-danger">Kritik</span>}
-                          {status === 'warning' && <span className="badge badge-warning">Düşük</span>}
-                          {status === 'normal' && <span className="badge badge-success">Normal</span>}
+                          {status === 'critical' && <span className="badge badge-danger">{t('productsPage.status.critical')}</span>}
+                          {status === 'warning' && <span className="badge badge-warning">{t('productsPage.status.warning')}</span>}
+                          {status === 'normal' && <span className="badge badge-success">{t('productsPage.status.normal')}</span>}
                         </td>
                       </tr>
                     );

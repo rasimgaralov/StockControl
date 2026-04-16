@@ -3,32 +3,58 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-
-const navItems = [
-  { label: 'Ana Sayfa', icon: '📊', href: '/' },
-  { label: 'Ürünler', icon: '📋', href: '/urunler' },
-  { label: 'Departmanlar', icon: '🏢', href: '/departmanlar' },
-  { label: 'Transferler', icon: '🔄', href: '/transferler' },
-  { label: 'Fire / Zayi', icon: '🗑️', href: '/fire-zayi' },
-  { label: 'Alarmlar', icon: '🔔', href: '/alarmlar' },
-];
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { activeAlerts } = useApp();
+  const { t, lang, changeLanguage } = useLanguage();
+
+  const navItems = [
+    { label: t('sidebar.home'), icon: '📊', href: '/' },
+    { label: t('sidebar.products'), icon: '📋', href: '/urunler' },
+    { label: t('sidebar.departments'), icon: '🏢', href: '/departmanlar' },
+    { label: t('sidebar.transfers'), icon: '🔄', href: '/transferler' },
+    { label: t('sidebar.waste'), icon: '🗑️', href: '/fire-zayi' },
+    { label: t('sidebar.alerts'), icon: '🔔', href: '/alarmlar' },
+  ];
+
+  const closeSidebarOnMobile = () => {
+    document.documentElement.classList.remove('sidebar-open');
+  };
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-icon">ST</div>
-        <div>
-          <h1>StokTakip</h1>
-          <span>Stok Yönetim Sistemi</span>
+      <div className="sidebar-logo" style={{ flexDirection: 'column', alignItems: 'center', padding: '24px 20px 10px', gap: '4px' }}>
+        <img 
+          src="/assets/Gulf_Distinguished_Hospitality_Co.svg" 
+          alt="Gulf Logo" 
+          style={{ width: '100%', maxWidth: '140px', height: 'auto', marginBottom: '6px' }}
+        />
+        <div style={{ 
+          fontSize: '14px', 
+          fontWeight: '700', 
+          color: 'var(--text-primary)', 
+          textAlign: 'center',
+          lineHeight: '1.2'
+        }}>
+          Gulf Distinguished
+          <div style={{ fontSize: '13px', fontWeight: '600' }}>Hospitality Co.</div>
+        </div>
+        <div style={{ 
+          fontSize: '11px', 
+          fontWeight: '600', 
+          color: 'var(--accent-primary)', 
+          textTransform: 'uppercase', 
+          letterSpacing: '0.8px',
+          marginTop: '2px'
+        }}>
+          Stock Control System
         </div>
       </div>
 
       <nav className="sidebar-nav">
-        <div className="nav-section-title">Menü</div>
+        <div className="nav-section-title">{t('sidebar.menu')}</div>
         {navItems.map(item => {
           const isActive = item.href === '/'
             ? pathname === '/'
@@ -39,6 +65,7 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={`nav-link ${isActive ? 'active' : ''}`}
+              onClick={closeSidebarOnMobile}
             >
               <span className="nav-icon">{item.icon}</span>
               <span>{item.label}</span>
@@ -49,10 +76,27 @@ export default function Sidebar() {
           );
         })}
 
-        <div className="nav-section-title" style={{ marginTop: '12px' }}>Sistem</div>
-        <div className="nav-link" style={{ cursor: 'default', opacity: 0.5 }}>
+        <div className="nav-section-title" style={{ marginTop: '12px' }}>{t('sidebar.system')}</div>
+        <Link 
+          href="/ayarlar" 
+          className={`nav-link ${pathname.startsWith('/ayarlar') ? 'active' : ''}`}
+          onClick={closeSidebarOnMobile}
+        >
           <span className="nav-icon">⚙️</span>
-          <span>Ayarlar</span>
+          <span>{t('sidebar.settings')}</span>
+        </Link>
+
+        {/* Global Language Switcher in Sidebar */}
+        <div style={{ marginTop: 'auto', marginBottom: '10px' }}>
+          <div className="nav-section-title">{lang === 'en' ? 'Language' : 'اللغة'}</div>
+          <button 
+            className="nav-link" 
+            style={{ width: '100%', textAlign: 'left', background: 'transparent' }}
+            onClick={() => changeLanguage(lang === 'en' ? 'ar' : 'en')}
+          >
+            <span className="nav-icon">🌐</span>
+            <span>{lang === 'en' ? 'Arabic (عربي)' : 'English'}</span>
+          </button>
         </div>
       </nav>
 
@@ -78,7 +122,7 @@ export default function Sidebar() {
         }}>AY</div>
         <div>
           <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Ahmet Yılmaz</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('sidebar.roleAdmin')}</div>
         </div>
       </div>
     </aside>
