@@ -53,14 +53,14 @@ export default function TransferlerPage() {
   }, [transfersList, filterDept, startDate, endDate]);
 
   const openModal = () => {
-    const defaultFromDeptId = departments.find(d => d.name === 'Depo' || d.name === 'Warehouse')?.id || departments[0]?.id || '';
+    const warehouseDept = departments.find(d => d.name_en === 'Warehouse' || d.name_en === 'Depo') || departments[0];
     const defaultToDeptId = departments[0]?.id || '';
     const deptProducts = products.filter(p => p.deptId === defaultToDeptId);
     const defaultProduct = deptProducts[0];
 
     setFormData({
       productId: defaultProduct?.id || '',
-      fromDeptId: defaultFromDeptId,
+      fromDeptId: warehouseDept?.id || '',
       toDeptId: defaultToDeptId,
       quantity: ''
     });
@@ -107,6 +107,12 @@ export default function TransferlerPage() {
       </div>
     );
   }
+
+  const warehouseDept = departments.find(d => d.name_en === 'Warehouse' || d.name_en === 'Depo') || departments[0];
+  const selectedProduct = products.find(p => p.id === formData.productId);
+  const isKiloOrLiters = selectedProduct && (selectedProduct.unit_en === 'kg' || selectedProduct.unit_en === 'liters');
+  const stepVal = isKiloOrLiters ? "0.001" : "0.1";
+  const minVal = isKiloOrLiters ? "0.001" : "0.1";
 
   return (
     <div className="slide-up">
@@ -299,9 +305,9 @@ export default function TransferlerPage() {
             <div className="form-group">
               <label className="form-label">{t('transfersPage.sourceLabel')}</label>
               <select className="form-select" value={formData.fromDeptId} disabled style={{ backgroundColor: 'var(--bg-surface-hover)', cursor: 'not-allowed' }}>
-                {departments.filter(d => d.id === formData.fromDeptId).map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
-                ))}
+                {warehouseDept && (
+                  <option value={warehouseDept.id}>{warehouseDept.icon} {(warehouseDept[`name_${lang}`] || warehouseDept.name_en)}</option>
+                )}
               </select>
             </div>
             <div className="form-group">
@@ -325,7 +331,7 @@ export default function TransferlerPage() {
               <input 
                 className="form-input" 
                 type="text" 
-                placeholder="Ürün adı yazın..." 
+                placeholder="Search..." 
                 value={productSearch}
                 onChange={(e) => {
                   setProductSearch(e.target.value);
@@ -375,7 +381,7 @@ export default function TransferlerPage() {
           </div>
           <div className="form-group">
             <label className="form-label">{t('transfersPage.qtyLabel')}</label>
-            <input className="form-input" type="number" required min="1" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} placeholder={t('transfersPage.qtyPlaceholder')} />
+            <input className="form-input" type="number" required min={minVal} step={stepVal} value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} placeholder={t('transfersPage.qtyPlaceholder')} />
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
