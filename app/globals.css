@@ -498,6 +498,13 @@ input, select, textarea {
   border-bottom: none;
 }
 
+.action-mobile {
+  display: none;
+}
+.action-desktop {
+  display: table-cell;
+}
+
 /* ═══════════════════════ BADGES ═══════════════════════ */
 .badge {
   display: inline-flex;
@@ -1107,6 +1114,27 @@ input, select, textarea {
 
   .toolbar {
     flex-direction: column;
+  }
+
+  .action-mobile {
+    display: table-cell;
+    position: sticky;
+    inset-inline-start: 0;
+    background: var(--bg-surface);
+    z-index: 10;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  }
+  
+  html[dir="rtl"] .action-mobile {
+    box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+  }
+  
+  .data-table tbody tr:hover .action-mobile {
+    background: var(--bg-surface-hover);
+  }
+  
+  .action-desktop {
+    display: none;
   }
 }
 
