@@ -2,13 +2,17 @@
 
 import { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { formatDateTime } from '@/data/mockData';
 import Modal from '@/components/Modal';
 
 export default function TransferlerPage() {
   const { products, departments, transfersList, addTransfer, getProductName, getDeptName, getDeptIcon, getUserName, loading, todayTransfers } = useApp();
+  const { hasPermission } = useAuth();
   const { t, lang } = useLanguage();
+
+  const canAdd = hasPermission('add');
 
   const [showModal, setShowModal] = useState(false);
   const [filterDept, setFilterDept] = useState('all');
@@ -122,9 +126,11 @@ export default function TransferlerPage() {
             <h2>{t('transfersPage.title')}</h2>
             <p>{t('transfersPage.subtitle')}</p>
           </div>
-          <button className="btn btn-primary" onClick={openModal}>
-            🔄 {t('transfersPage.newTransfer')}
-          </button>
+          {canAdd && (
+            <button className="btn btn-primary" onClick={openModal}>
+              🔄 {t('transfersPage.newTransfer')}
+            </button>
+          )}
         </div>
       </div>
 

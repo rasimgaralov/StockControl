@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { activeAlerts } = useApp();
+  const { currentUser, logout, getRoleName } = useAuth();
   const { t, lang, changeLanguage } = useLanguage();
 
   const navItems = [
@@ -22,6 +24,13 @@ export default function Sidebar() {
   const closeSidebarOnMobile = () => {
     document.documentElement.classList.remove('sidebar-open');
   };
+
+  const initials = currentUser?.name
+    ?.split(' ')
+    .map(w => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || '??';
 
   return (
     <aside className="sidebar">
@@ -79,11 +88,19 @@ export default function Sidebar() {
         <div className="nav-section-title" style={{ marginTop: '12px' }}>{t('sidebar.system')}</div>
         <Link 
           href="/ayarlar" 
-          className={`nav-link ${pathname.startsWith('/ayarlar') ? 'active' : ''}`}
+          className={`nav-link ${pathname === '/ayarlar' ? 'active' : ''}`}
           onClick={closeSidebarOnMobile}
         >
           <span className="nav-icon">⚙️</span>
           <span>{t('sidebar.settings')}</span>
+        </Link>
+        <Link 
+          href="/islem-gecmisi" 
+          className={`nav-link ${pathname.startsWith('/islem-gecmisi') ? 'active' : ''}`}
+          onClick={closeSidebarOnMobile}
+        >
+          <span className="nav-icon">📝</span>
+          <span>{t('sidebar.activityHistory')}</span>
         </Link>
 
         {/* Global Language Switcher in Sidebar */}
@@ -101,7 +118,7 @@ export default function Sidebar() {
       </nav>
 
       <div style={{
-        padding: '16px 20px',
+        padding: '12px 20px',
         borderTop: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
@@ -115,15 +132,34 @@ export default function Sidebar() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '14px',
+          fontSize: '12px',
           fontWeight: '700',
           color: 'white',
           flexShrink: 0,
-        }}>AY</div>
-        <div>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>Ahmet Yılmaz</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t('sidebar.roleAdmin')}</div>
+        }}>{initials}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {currentUser?.name || 'Unknown'}
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{getRoleName()}</div>
         </div>
+        <button 
+          onClick={logout}
+          title={t('sidebar.logout')}
+          style={{
+            background: 'rgba(239,68,68,0.1)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            borderRadius: '8px',
+            padding: '6px 8px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            lineHeight: 1,
+            transition: 'all 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          🚪
+        </button>
       </div>
     </aside>
   );

@@ -2,13 +2,17 @@
 
 import { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { formatDateTime } from '@/data/mockData';
 import Modal from '@/components/Modal';
 
 export default function FireZayiPage() {
   const { products, departments, wasteLogsList, addWasteLog, getProductName, getDeptName, getDeptIcon, getUserName, loading } = useApp();
+  const { hasPermission } = useAuth();
   const { t, lang } = useLanguage();
+
+  const canAdd = hasPermission('add');
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -64,9 +68,11 @@ export default function FireZayiPage() {
             <h2>{t('wastePage.title')}</h2>
             <p>{t('wastePage.subtitle')}</p>
           </div>
-          <button className="btn btn-primary" onClick={openModal}>
-            ➕ {t('wastePage.newRecord')}
-          </button>
+          {canAdd && (
+            <button className="btn btn-primary" onClick={openModal}>
+              ➕ {t('wastePage.newRecord')}
+            </button>
+          )}
         </div>
       </div>
 

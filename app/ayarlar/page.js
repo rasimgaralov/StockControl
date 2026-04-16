@@ -1,11 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import Modal from '@/components/Modal';
 
 export default function AyarlarPage() {
-  const { theme, changeTheme } = useApp();
+  const { theme, changeTheme, users, updateUser, deleteUser } = useApp();
+  const { currentUser, hasPermission } = useAuth();
   const { t } = useLanguage();
+
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', username: '', email: '' });
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const themes = [
     {
@@ -34,6 +42,42 @@ export default function AyarlarPage() {
     }
   ];
 
+  const roleLabels = {
+    admin: 'Admin',
+    manager: 'Manager',
+    editor: 'Editor',
+    user: 'User',
+  };
+
+  const roleBadgeColors = {
+    admin: { bg: 'rgba(239,68,68,0.12)', color: '#ef4444', border: 'rgba(239,68,68,0.2)' },
+    manager: { bg: 'rgba(99,102,241,0.12)', color: '#6366f1', border: 'rgba(99,102,241,0.2)' },
+    editor: { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: 'rgba(245,158,11,0.2)' },
+    user: { bg: 'rgba(107,114,128,0.12)', color: '#6b7280', border: 'rgba(107,114,128,0.2)' },
+  };
+
+  const openEditUser = (user) => {
+    setEditForm({ name: user.name, username: user.username || '', email: user.email || '' });
+    setEditingUser(user);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (editingUser) {
+      const success = await updateUser(editingUser.id, editForm);
+      if (success) setEditingUser(null);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (userToDelete) {
+      await deleteUser(userToDelete.id);
+      setUserToDelete(null);
+    }
+  };
+
+  const isAdmin = currentUser?.role === 'admin';
+
   return (
     <div className="slide-up">
       <div className="page-header">
@@ -41,6 +85,7 @@ export default function AyarlarPage() {
         <p>{t('settingsPage.subtitle')}</p>
       </div>
 
+      {/* Theme Selection */}
       <div className="content-card">
         <div className="content-card-header">
           <h3>{t('settingsPage.themeSelection')}</h3>
@@ -98,6 +143,150 @@ export default function AyarlarPage() {
           })}
         </div>
       </div>
+
+      {/* Users Section */}
+      <div className="content-card" style={{ marginTop: '24px' }}>
+        <div className="content-card-header">
+          <h3>👥 {t('settingsPage.usersTitle')}</h3>
+          <span className="badge badge-purple">{users.length} {t('settingsPage.usersCount')}</span>
+        </div>
+        
+        <div className="data-table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>{t('settingsPage.colName')}</th>
+                <th>{t('settingsPage.colUsername')}</th>
+                <th>{t('settingsPage.colEmail')}</th>
+                <th>{t('settingsPage.colRole')}</th>
+                {isAdmin && <th>{t('settingsPage.colActions')}</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(user => {
+                const roleStyle = roleBadgeColors[user.role] || roleBadgeColors.user;
+                const isSelf = currentUser?.id === user.id;
+                
+                return (
+                  <tr key={user.id}>
+                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          color: 'white',
+                          flexShrink: 0,
+                        }}>
+                          {user.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <span>{user.name}</span>
+                        {isSelf && (
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            color: 'var(--accent-primary)',
+                            background: 'rgba(5,150,105,0.1)',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                          }}>
+                            {t('settingsPage.you')}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '13px' }}>
+                      {user.username || '-'}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+                      {user.email || '-'}
+                    </td>
+                    <td>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '4px 12px',
+                        borderRadius: '8px',
+                        background: roleStyle.bg,
+                        color: roleStyle.color,
+                        border: `1px solid ${roleStyle.border}`,
+                        fontSize: '12px',
+                        fontWeight: '600',
+                      }}>
+                        {roleLabels[user.role] || user.role}
+                      </span>
+                    </td>
+                    {isAdmin && (
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="btn btn-secondary btn-sm" onClick={() => openEditUser(user)}>
+                            ✏️
+                          </button>
+                          {!isSelf && (
+                            <button className="btn btn-danger btn-sm" onClick={() => setUserToDelete(user)}>
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <Modal
+          isOpen={true}
+          onClose={() => setEditingUser(null)}
+          title={t('settingsPage.editUserTitle')}
+        >
+          <form onSubmit={handleEditSubmit}>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colName')}</label>
+              <input className="form-input" required value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colUsername')}</label>
+              <input className="form-input" required value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colEmail')}</label>
+              <input className="form-input" type="email" required value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)}>{t('common.cancel')}</button>
+              <button type="submit" className="btn btn-primary">{t('common.save')}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Delete User Confirm Modal */}
+      {userToDelete && (
+        <Modal
+          isOpen={true}
+          onClose={() => setUserToDelete(null)}
+          title={t('settingsPage.deleteUserTitle')}
+        >
+          <div style={{ padding: '10px 0 20px 0', fontSize: '15px', color: 'var(--text-secondary)' }}>
+            {t('settingsPage.deleteUserConfirm').replace('{name}', userToDelete.name)}
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={() => setUserToDelete(null)}>{t('common.cancel')}</button>
+            <button type="button" className="btn btn-danger" onClick={handleDeleteUser}>{t('common.delete')}</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

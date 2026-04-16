@@ -2,10 +2,12 @@
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
+  const { currentUser } = useAuth();
   const [products, setProducts] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
@@ -26,7 +28,7 @@ export function AppProvider({ children }) {
       { data: wData }
     ] = await Promise.all([
       supabase.from('departments').select('*'),
-      supabase.from('users').select('*'),
+      supabase.from('users').select('id, name, username, email, role, deptId'),
       supabase.from('products').select('*'),
       supabase.from('deptStock').select('*'),
       supabase.from('transfers').select('*'),
@@ -55,6 +57,25 @@ export function AppProvider({ children }) {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
+  // ═══════════ Activity Logging ═══════════
+  const logActivity = useCallback(async (action, targetType, targetId, details) => {
+    const userId = currentUser?.id || 'unknown';
+    const logEntry = {
+      id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      userId,
+      action,
+      targetType,
+      targetId: targetId || null,
+      details: typeof details === 'object' ? JSON.stringify(details) : (details || null),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Fire and forget — don't block the UI
+    supabase.from('activity_logs').insert([logEntry]).then(({ error }) => {
+      if (error) console.error('Activity log error:', error.message);
+    });
+  }, [currentUser]);
+
   // ═══════════ Helpers (Dependent on state) ═══════════
   const getDeptName = useCallback((id, lang = 'en') => {
     const dept = departments.find(d => d.id === id);
@@ -68,67 +89,71 @@ export function AppProvider({ children }) {
   const getUserName = useCallback((id, lang = 'en') => {
     const user = users.find(u => u.id === id);
     if (!user) return 'Unknown';
-    return user.name || 'Unknown'; // User names are not localized usually, but if needed: user[`name_${lang}`]
+    return user.name || 'Unknown';
   }, [users]);
   
   const getUserRole = useCallback((id, lang = 'en') => {
     const user = users.find(u => u.id === id);
     if (!user) return 'Unknown';
-    return user[`role_${lang}`] || user.role_en || 'Unknown';
+    return user[`role_${lang}`] || user.role_en || user.role || 'Unknown';
   }, [users]);
 
   const getProductName = useCallback((id, lang = 'en') => {
     const prod = products.find(p => p.id === id);
     if (!prod) return 'Unknown';
-    return prod.name || 'Unknown'; // Product names were explicitly excluded from translation
+    return prod.name || 'Unknown';
   }, [products]);
   
   const getProductById = useCallback((id) => products.find(p => p.id === id), [products]);
 
   // ═══════════ Product Actions ═══════════
   const addProduct = useCallback(async (product) => {
+    const userId = currentUser?.id || 'unknown';
     const newProduct = {
       ...product,
       id: 'p' + Date.now(),
-      createdBy: 'u1',
+      createdBy: userId,
     };
     const { error } = await supabase.from('products').insert([newProduct]);
     if (!error) {
       setProducts(prev => [...prev, newProduct]);
+      logActivity('add', 'product', newProduct.id, { name: newProduct.name, quantity: newProduct.quantity });
     }
     return newProduct;
-  }, []);
+  }, [currentUser, logActivity]);
 
   const updateProduct = useCallback(async (id, updates) => {
     const { error } = await supabase.from('products').update(updates).eq('id', id);
     if (!error) {
+      const oldProduct = products.find(p => p.id === id);
       setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+      logActivity('edit', 'product', id, { name: oldProduct?.name, changes: updates });
     }
-  }, []);
+  }, [products, logActivity]);
 
   const deleteProduct = useCallback(async (id) => {
+    const oldProduct = products.find(p => p.id === id);
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (!error) {
       setProducts(prev => prev.filter(p => p.id !== id));
+      logActivity('delete', 'product', id, { name: oldProduct?.name });
     }
-  }, []);
+  }, [products, logActivity]);
 
   // ═══════════ Transfer Actions ═══════════
   const addTransfer = useCallback(async (transfer) => {
+    const userId = currentUser?.id || 'unknown';
     const newTransfer = {
       ...transfer,
       id: 't' + Date.now(),
-      transferredBy: 'u1',
+      transferredBy: userId,
     };
 
-    // For a real app, this should be a stored procedure to be transactional.
-    // For now, we replicate the mock behavior asynchronously.
     const { error } = await supabase.from('transfers').insert([newTransfer]);
     if (error) return;
 
     setTransfers(prev => [newTransfer, ...prev]);
 
-    // Update product quantity remotely and locally
     const product = products.find(p => p.id === transfer.productId);
     if (product) {
       const newQty = Math.max(0, product.quantity - transfer.quantity);
@@ -136,16 +161,24 @@ export function AppProvider({ children }) {
       setProducts(prev => prev.map(p => p.id === transfer.productId ? { ...p, quantity: newQty } : p));
     }
 
-    fetchData(); // Refresh all related deptStock tables just to be safe
+    logActivity('transfer', 'transfer', newTransfer.id, {
+      product: product?.name,
+      quantity: transfer.quantity,
+      from: transfer.fromDeptId,
+      to: transfer.toDeptId,
+    });
+
+    fetchData();
     return newTransfer;
-  }, [products]);
+  }, [products, currentUser, logActivity]);
 
   // ═══════════ Waste Actions ═══════════
   const addWasteLog = useCallback(async (wasteLog) => {
+    const userId = currentUser?.id || 'unknown';
     const newWaste = {
       ...wasteLog,
       id: 'w' + Date.now(),
-      loggedBy: 'u1',
+      loggedBy: userId,
     };
 
     const { error } = await supabase.from('wasteLogs').insert([newWaste]);
@@ -160,8 +193,35 @@ export function AppProvider({ children }) {
       setProducts(prev => prev.map(p => p.id === wasteLog.productId ? { ...p, quantity: newQty } : p));
     }
 
+    logActivity('waste', 'waste', newWaste.id, {
+      product: product?.name,
+      quantity: wasteLog.quantity,
+      reason: wasteLog.reason,
+    });
+
     return newWaste;
-  }, [products]);
+  }, [products, currentUser, logActivity]);
+
+  // ═══════════ User Management (Admin only) ═══════════
+  const updateUser = useCallback(async (id, updates) => {
+    const { error } = await supabase.from('users').update(updates).eq('id', id);
+    if (!error) {
+      const oldUser = users.find(u => u.id === id);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+      logActivity('edit', 'user', id, { name: oldUser?.name, changes: updates });
+    }
+    return !error;
+  }, [users, logActivity]);
+
+  const deleteUser = useCallback(async (id) => {
+    const oldUser = users.find(u => u.id === id);
+    const { error } = await supabase.from('users').delete().eq('id', id);
+    if (!error) {
+      setUsers(prev => prev.filter(u => u.id !== id));
+      logActivity('delete', 'user', id, { name: oldUser?.name });
+    }
+    return !error;
+  }, [users, logActivity]);
 
   // ═══════════ Computed Values ═══════════
   const criticalProducts = products.filter(p => p.quantity <= p.criticalThreshold);
@@ -176,7 +236,7 @@ export function AppProvider({ children }) {
 
     if (p.expiryDate) {
       const diff = new Date(p.expiryDate) - new Date();
-      if (diff > 0 && diff < 15 * 24 * 60 * 60 * 1000) { // 15 days warning
+      if (diff > 0 && diff < 15 * 24 * 60 * 60 * 1000) {
         pAlerts.push({ id: 'exp_' + p.id, productId: p.id, alertType: 'expiry_warning', triggeredAt: new Date().toISOString() });
       }
     }
@@ -190,6 +250,7 @@ export function AppProvider({ children }) {
   const value = {
     products,
     departments,
+    users,
     transfersList,
     wasteLogsList,
     deptStockList,
@@ -208,8 +269,11 @@ export function AppProvider({ children }) {
     addProduct,
     updateProduct,
     deleteProduct,
+    updateUser,
+    deleteUser,
     addTransfer,
     addWasteLog,
+    logActivity,
     refreshData: fetchData,
   };
 
@@ -221,4 +285,3 @@ export function useApp() {
   if (!ctx) throw new Error('useApp must be used within AppProvider');
   return ctx;
 }
-

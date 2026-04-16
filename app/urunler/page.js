@@ -2,13 +2,19 @@
 
 import { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { getStockStatus, formatDate } from '@/data/mockData';
 import Modal from '@/components/Modal';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function UrunlerPage() {
   const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading } = useApp();
+  const { hasPermission } = useAuth();
   const { t, lang } = useLanguage();
+
+  const canAdd = hasPermission('add');
+  const canEdit = hasPermission('edit');
+  const canDelete = hasPermission('delete');
 
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState('all');
@@ -148,9 +154,11 @@ export default function UrunlerPage() {
                 : `${t('productsPage.productsListedIn')} ${getDeptName(filterDept, lang)}: ${filteredProducts.length}`}
             </p>
           </div>
-          <button className="btn btn-primary" onClick={openAddModal}>
-            ➕ {t('productsPage.newProduct')}
-          </button>
+          {canAdd && (
+            <button className="btn btn-primary" onClick={openAddModal}>
+              ➕ {t('productsPage.newProduct')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -216,7 +224,9 @@ export default function UrunlerPage() {
                   <tr key={p.id}>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <button className="btn btn-secondary btn-sm mobile-only" style={{ padding: '2px 6px', fontSize: '11px' }} onClick={() => openEditModal(p)}>✏️</button>
+                        {canEdit && (
+                          <button className="btn btn-secondary btn-sm mobile-only" style={{ padding: '2px 6px', fontSize: '11px' }} onClick={() => openEditModal(p)}>✏️</button>
+                        )}
                         <span>{p.name}</span>
                       </div>
                     </td>
@@ -233,8 +243,12 @@ export default function UrunlerPage() {
                     <td>{getStatusBadge(p)}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-secondary btn-sm desktop-only" onClick={() => openEditModal(p)}>✏️</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => setProductToDelete(p)}>🗑️</button>
+                        {canEdit && (
+                          <button className="btn btn-secondary btn-sm desktop-only" onClick={() => openEditModal(p)}>✏️</button>
+                        )}
+                        {canDelete && (
+                          <button className="btn btn-danger btn-sm" onClick={() => setProductToDelete(p)}>🗑️</button>
+                        )}
                       </div>
                     </td>
                   </tr>

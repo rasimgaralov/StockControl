@@ -1,9 +1,8 @@
 import "./globals.css";
 import { AppProvider } from '@/context/AppContext';
 import { LanguageProvider } from '@/context/LanguageContext';
-import Sidebar from '@/components/Sidebar';
-import MobileNavbar from '@/components/MobileNavbar';
-import SidebarOverlay from '@/components/SidebarOverlay';
+import { AuthProvider } from '@/context/AuthContext';
+import AppShell from '@/components/AppShell';
 
 export const metadata = {
   title: "StokTakip — Stok Yönetim Sistemi",
@@ -21,16 +20,11 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body>
         <LanguageProvider>
-          <AppProvider>
-            <div className="app-layout">
-              <MobileNavbar />
-              <Sidebar />
-              <main className="main-content fade-in">
-                {children}
-              </main>
-              <SidebarOverlay />
-            </div>
-          </AppProvider>
+          <AuthProvider>
+            <AppProvider>
+              <AppShell>{children}</AppShell>
+            </AppProvider>
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>
