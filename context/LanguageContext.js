@@ -40,8 +40,19 @@ export function LanguageProvider({ children }) {
 
   const tData = useCallback((value, category) => {
     if (!value) return value;
+    
+    // Check if the value is a native bilingual JSON string directly from the DB
+    if (typeof value === 'string' && value.trim().startsWith('{')) {
+      try {
+        const obj = JSON.parse(value);
+        return obj[lang] || obj.en || value;
+      } catch (e) {
+        // Not a valid JSON, fallback to standard dictionary mapping
+      }
+    }
+
+    // Standard dictionary mapping fallback
     const keyPath = `data.${category}.${value}`;
-    // Split ONLY by '.' representing the exact boundary, assuming value does not contain '.'
     const keys = ['data', category, value];
     let current = dictionaries[lang] || dictionaries['en'];
     

@@ -56,11 +56,33 @@ export function AppProvider({ children }) {
   };
 
   // ═══════════ Helpers (Dependent on state) ═══════════
-  const getDeptName = useCallback((id) => departments.find(d => d.id === id)?.name || 'Bilinmiyor', [departments]);
+  const getDeptName = useCallback((id, lang = 'en') => {
+    const dept = departments.find(d => d.id === id);
+    if(!dept) return 'Unknown';
+    return dept[`name_${lang}`] || dept.name_en || 'Unknown';
+  }, [departments]);
+  
   const getDeptIcon = useCallback((id) => departments.find(d => d.id === id)?.icon || '📋', [departments]);
   const getDeptColor = useCallback((id) => departments.find(d => d.id === id)?.color || '#059669', [departments]);
-  const getUserName = useCallback((id) => users.find(u => u.id === id)?.name || 'Bilinmiyor', [users]);
-  const getProductName = useCallback((id) => products.find(p => p.id === id)?.name || 'Bilinmiyor', [products]);
+  
+  const getUserName = useCallback((id, lang = 'en') => {
+    const user = users.find(u => u.id === id);
+    if (!user) return 'Unknown';
+    return user.name || 'Unknown'; // User names are not localized usually, but if needed: user[`name_${lang}`]
+  }, [users]);
+  
+  const getUserRole = useCallback((id, lang = 'en') => {
+    const user = users.find(u => u.id === id);
+    if (!user) return 'Unknown';
+    return user[`role_${lang}`] || user.role_en || 'Unknown';
+  }, [users]);
+
+  const getProductName = useCallback((id, lang = 'en') => {
+    const prod = products.find(p => p.id === id);
+    if (!prod) return 'Unknown';
+    return prod.name || 'Unknown'; // Product names were explicitly excluded from translation
+  }, [products]);
+  
   const getProductById = useCallback((id) => products.find(p => p.id === id), [products]);
 
   // ═══════════ Product Actions ═══════════

@@ -8,7 +8,7 @@ import Modal from '@/components/Modal';
 
 export default function FireZayiPage() {
   const { products, departments, wasteLogsList, addWasteLog, getProductName, getDeptName, getDeptIcon, getUserName, loading } = useApp();
-  const { t, tData } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -169,7 +169,7 @@ export default function FireZayiPage() {
           </div>
           <div className="form-group">
             <label className="form-label">{t('wastePage.reasonLabel')}</label>
-            <textarea className="form-textarea" required value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} placeholder={t('wastePage.reasonPlaceholder')} />
+            <textarea className="form-textarea" required value={formData.reason_en} onChange={(e) => setFormData({ ...formData, reason_en: e.target.value, reason_ar: e.target.value })} placeholder={t('wastePage.reasonPlaceholder')} />
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>

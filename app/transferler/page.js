@@ -8,7 +8,7 @@ import Modal from '@/components/Modal';
 
 export default function TransferlerPage() {
   const { products, departments, transfersList, addTransfer, getProductName, getDeptName, getDeptIcon, getUserName, loading, todayTransfers } = useApp();
-  const { t, tData } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [showModal, setShowModal] = useState(false);
   const [filterDept, setFilterDept] = useState('all');

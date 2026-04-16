@@ -8,7 +8,7 @@ import { useLanguage } from '@/context/LanguageContext';
 
 export default function UrunlerPage() {
   const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading } = useApp();
-  const { t, tData } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState('all');
@@ -142,7 +142,7 @@ export default function UrunlerPage() {
             <p>
               {filterDept === 'all' 
                 ? `${products.length} ${t('productsPage.productsRegistered')}` 
-                : `${t('productsPage.productsListedIn')} ${getDeptName(filterDept)}: ${filteredProducts.length}`}
+                : `${t('productsPage.productsListedIn')} ${getDeptName(filterDept, lang)}: ${filteredProducts.length}`}
             </p>
           </div>
           <button className="btn btn-primary" onClick={openAddModal}>
@@ -165,7 +165,7 @@ export default function UrunlerPage() {
         <select className="filter-select" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
           <option value="all">{t('productsPage.allDepartments')}</option>
           {departments.map(d => (
-            <option key={d.id} value={d.id}>{d.icon} {d.name}</option>
+            <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
           ))}
         </select>
         <select className="filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
@@ -223,9 +223,9 @@ export default function UrunlerPage() {
                     }}>
                       {p.quantity}
                     </td>
-                    <td>{tData(p.unit, 'units')}</td>
-                    <td>{tData(p.supplier, 'suppliers')}</td>
-                    <td><span className="badge badge-purple">{tData(getDeptName(p.deptId), 'departments')}</span></td>
+                    <td>{p[`unit_${lang}`] || p.unit_en}</td>
+                    <td>{p[`supplier_${lang}`] || p.supplier_en}</td>
+                    <td><span className="badge badge-purple">{getDeptName(p.deptId, lang)}</span></td>
                     <td>{formatDate(p.expiryDate)}</td>
                     <td>{getStatusBadge(p)}</td>
                     <td>
@@ -281,7 +281,7 @@ export default function UrunlerPage() {
             </div>
             <div className="form-group">
               <label className="form-label">{t('productsPage.unitLabel')}</label>
-              <select className="form-select" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })}>
+              <select className="form-select" value={formData.unit_en} onChange={(e) => setFormData({ ...formData, unit_en: e.target.value, unit_ar: e.target.value })}>
                 <option value="kg">kg</option>
                 <option value="litre">litre</option>
                 <option value="adet">adet</option>
@@ -291,7 +291,7 @@ export default function UrunlerPage() {
           </div>
           <div className="form-group">
             <label className="form-label">{t('productsPage.supplierLabel')}</label>
-            <input className="form-input" required value={formData.supplier} onChange={(e) => setFormData({ ...formData, supplier: e.target.value })} placeholder={t('productsPage.supplierPlaceholder')} />
+            <input className="form-input" required value={formData.supplier_en} onChange={(e) => setFormData({ ...formData, supplier_en: e.target.value, supplier_ar: e.target.value })} placeholder={t('productsPage.supplierPlaceholder')} />
           </div>
           <div className="form-row">
             <div className="form-group">
@@ -313,7 +313,7 @@ export default function UrunlerPage() {
             <label className="form-label">{t('productsPage.deptLabel')}</label>
             <select className="form-select" value={formData.deptId} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })}>
               {departments.map(d => (
-                <option key={d.id} value={d.id}>{d.icon} {d.name}</option>
+                <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
               ))}
             </select>
           </div>

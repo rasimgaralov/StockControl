@@ -7,7 +7,7 @@ import { getStockStatus, formatDate } from '@/data/mockData';
 
 export default function DepartmanlarPage() {
   const { departments, products, deptStockList, getProductName, loading } = useApp();
-  const { t, tData } = useLanguage();
+  const { t, lang } = useLanguage();
   const [selectedDept, setSelectedDept] = useState(null);
 
   const deptSummaries = useMemo(() => {
@@ -60,7 +60,7 @@ export default function DepartmanlarPage() {
                 {dept.icon}
               </div>
               <div>
-                <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>{tData(dept.name, 'departments')}</div>
+                <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>{(dept[`name_${lang}`] || dept.name_en)}</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dept.productCount} {t('departmentsPage.products')}</div>
               </div>
             </div>

@@ -9,7 +9,7 @@ import Modal from '@/components/Modal';
 
 function AlarmlarContent() {
   const { activeAlerts, products, getProductById, loading, updateProduct } = useApp();
-  const { t, tData } = useLanguage();
+  const { t, lang } = useLanguage();
   const searchParams = useSearchParams();
   const initialFilter = searchParams.get('filter') || 'all';
   
