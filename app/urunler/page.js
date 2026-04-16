@@ -280,7 +280,15 @@ export default function UrunlerPage() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">{t('productsPage.qtyLabel')}</label>
-              <input className="form-input" type="number" required min="0" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
+              <input 
+                className="form-input" 
+                type="number" 
+                required 
+                min={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
+                step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
+                value={formData.quantity} 
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} 
+              />
             </div>
             <div className="form-group">
               <label className="form-label">{t('productsPage.unitLabel')}</label>
