@@ -23,6 +23,7 @@ export default function UrunlerPage() {
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: ''
   });
@@ -233,7 +234,7 @@ export default function UrunlerPage() {
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button className="btn btn-secondary btn-sm desktop-only" onClick={() => openEditModal(p)}>✏️</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => deleteProduct(p.id)}>🗑️</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => setProductToDelete(p)}>🗑️</button>
                       </div>
                     </td>
                   </tr>
@@ -334,6 +335,28 @@ export default function UrunlerPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      {productToDelete && (
+        <Modal
+          isOpen={true}
+          onClose={() => setProductToDelete(null)}
+          title={lang === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?'}
+        >
+          <div style={{ padding: '10px 0 20px 0', fontSize: '15px', color: 'var(--text-secondary)' }}>
+            {lang === 'ar' 
+              ? `هل أنت متأكد أنك تريد حذف "${productToDelete.name}"؟ لا يمكن التراجع عن هذا الإجراء.` 
+              : `Are you sure you want to delete "${productToDelete.name}"? This action cannot be undone.`}
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={() => setProductToDelete(null)}>{t('common.cancel')}</button>
+            <button type="button" className="btn btn-danger" onClick={() => {
+              deleteProduct(productToDelete.id);
+              setProductToDelete(null);
+            }}>{lang === 'ar' ? 'حذف' : 'Delete'}</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
