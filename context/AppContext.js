@@ -13,6 +13,7 @@ export function AppProvider({ children }) {
   const [users, setUsers] = useState([]);
   const [transfersList, setTransfers] = useState([]);
   const [wasteLogsList, setWasteLogs] = useState([]);
+  const [inboundsList, setInbounds] = useState([]);
   const [deptStockList, setDeptStock] = useState([]);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState('light-mint');
@@ -25,14 +26,16 @@ export function AppProvider({ children }) {
       { data: pData },
       { data: dsData },
       { data: tData },
-      { data: wData }
+      { data: wData },
+      { data: iData }
     ] = await Promise.all([
       supabase.from('departments').select('*'),
       supabase.from('users').select('id, name, username, email, role, deptId'),
       supabase.from('products').select('*'),
       supabase.from('deptStock').select('*'),
       supabase.from('transfers').select('*'),
-      supabase.from('wasteLogs').select('*')
+      supabase.from('wasteLogs').select('*'),
+      supabase.from('inbounds').select('*')
     ]);
 
     setDepartments(dData || []);
@@ -41,6 +44,7 @@ export function AppProvider({ children }) {
     setDeptStock(dsData || []);
     setTransfers(tData || []);
     setWasteLogs(wData || []);
+    setInbounds(iData || []);
     setLoading(false);
   };
 
@@ -172,6 +176,38 @@ export function AppProvider({ children }) {
     return newTransfer;
   }, [products, currentUser, logActivity]);
 
+  // ═══════════ Inbound Actions ═══════════
+  const addInbound = useCallback(async (inbound) => {
+    const userId = currentUser?.id || 'unknown';
+    const newInbound = {
+      ...inbound,
+      id: 'i' + Date.now(),
+      receivedBy: userId,
+    };
+
+    const { error } = await supabase.from('inbounds').insert([newInbound]);
+    if (error) return;
+
+    setInbounds(prev => [newInbound, ...prev]);
+
+    const product = products.find(p => p.id === inbound.productId);
+    if (product) {
+      const newQty = product.quantity + inbound.quantity;
+      await supabase.from('products').update({ quantity: newQty }).eq('id', inbound.productId);
+      setProducts(prev => prev.map(p => p.id === inbound.productId ? { ...p, quantity: newQty } : p));
+    }
+
+    logActivity('add', 'product', inbound.productId, {
+      name: product?.name,
+      quantity: inbound.quantity,
+      reason: 'Mal Kabul (Inbound)',
+      supplier: inbound.supplier,
+    });
+
+    fetchData();
+    return newInbound;
+  }, [products, currentUser, logActivity]);
+
   // ═══════════ Waste Actions ═══════════
   const addWasteLog = useCallback(async (wasteLog) => {
     const userId = currentUser?.id || 'unknown';
@@ -271,6 +307,7 @@ export function AppProvider({ children }) {
     users,
     transfersList,
     wasteLogsList,
+    inboundsList,
     deptStockList,
     criticalProducts,
     activeAlerts,
@@ -292,6 +329,7 @@ export function AppProvider({ children }) {
     deleteUser,
     addTransfer,
     addWasteLog,
+    addInbound,
     logActivity,
     refreshData: fetchData,
   };

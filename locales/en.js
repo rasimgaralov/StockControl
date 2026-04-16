@@ -14,6 +14,7 @@ export const en = {
     system: "System",
     home: "Home",
     products: "Products",
+    inbounds: "Inbounds",
     departments: "Departments",
     transfers: "Transfers",
     waste: "Waste / Loss",
@@ -167,6 +168,31 @@ export const en = {
     reasonLabel: "Reason",
     reasonPlaceholder: "Explain the reason...",
     saveBtn: "Save"
+  },
+  inboundsPage: {
+    loading: "Loading inbounds...",
+    title: "Incoming Stocks",
+    subtitle: "Track new stock from suppliers",
+    newInbound: "New Stock Entry",
+    totalInbounds: "Total Incoming",
+    qtyInbound: "Total Quantity",
+    activeSuppliers: "Active Suppliers",
+    historyTitle: "Inbound History",
+    historyCount: "records",
+    emptyState: "No incoming stock records found",
+    table: {
+      date: "Date",
+      product: "Product",
+      supplier: "Supplier",
+      qty: "Quantity",
+      user: "Received By"
+    },
+    modalTitle: "New Stock Entry",
+    productLabel: "Product",
+    supplierLabel: "Supplier",
+    supplierPlaceholder: "Supplier name",
+    qtyLabel: "Quantity",
+    saveBtn: "Add Stock"
   },
   alarmsPage: {
     loading: "Loading alarms...",

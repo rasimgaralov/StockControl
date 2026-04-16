@@ -14,6 +14,7 @@ export const ar = {
     system: "النظام",
     home: "الرئيسية",
     products: "المنتجات",
+    inbounds: "واردات المخزون",
     departments: "الأقسام",
     transfers: "التحويلات",
     waste: "النفايات / الخسائر",
@@ -165,6 +166,31 @@ export const ar = {
     reasonLabel: "السبب",
     reasonPlaceholder: "اشرح السبب...",
     saveBtn: "حفظ"
+  },
+  inboundsPage: {
+    loading: "جاري تحميل الواردات...",
+    title: "واردات المخزون",
+    subtitle: "تتبع المخزون الجديد من الموردين",
+    newInbound: "إدخال مخزون جديد",
+    totalInbounds: "إجمالي الواردات",
+    qtyInbound: "الكمية الإجمالية",
+    activeSuppliers: "الموردين النشطين",
+    historyTitle: "سجل الواردات",
+    historyCount: "سجلات",
+    emptyState: "لم يتم العثور على سجلات واردة",
+    table: {
+      date: "التاريخ",
+      product: "المنتج",
+      supplier: "المورد",
+      qty: "الكمية",
+      user: "استلمت من قبل"
+    },
+    modalTitle: "إدخال مخزون جديد",
+    productLabel: "المنتج",
+    supplierLabel: "المورد",
+    supplierPlaceholder: "اسم المورد",
+    qtyLabel: "الكمية",
+    saveBtn: "إضافة مخزون"
   },
   alarmsPage: {
     loading: "جاري تحميل التنبيهات...",

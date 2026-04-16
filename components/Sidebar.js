@@ -15,6 +15,7 @@ export default function Sidebar() {
   const navItems = [
     { label: t('sidebar.home'), icon: '📊', href: '/' },
     { label: t('sidebar.products'), icon: '📋', href: '/urunler' },
+    { label: t('sidebar.inbounds'), icon: '📥', href: '/gelen-stoklar' },
     { label: t('sidebar.departments'), icon: '🏢', href: '/departmanlar' },
     { label: t('sidebar.transfers'), icon: '🔄', href: '/transferler' },
     { label: t('sidebar.waste'), icon: '🗑️', href: '/fire-zayi' },
