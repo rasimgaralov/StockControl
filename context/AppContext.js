@@ -213,6 +213,24 @@ export function AppProvider({ children }) {
     return !error;
   }, [users, logActivity]);
 
+  const updateUserPassword = useCallback(async (id, newPassword) => {
+    try {
+      const res = await fetch(`/api/users/${id}/password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword })
+      });
+      if (!res.ok) throw new Error('Password update failed');
+      
+      const oldUser = users.find(u => u.id === id);
+      logActivity('edit', 'user', id, { name: oldUser?.name, changes: { password: 'updated' } });
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  }, [users, logActivity]);
+
   const deleteUser = useCallback(async (id) => {
     const oldUser = users.find(u => u.id === id);
     const { error } = await supabase.from('users').delete().eq('id', id);
@@ -270,6 +288,7 @@ export function AppProvider({ children }) {
     updateProduct,
     deleteProduct,
     updateUser,
+    updateUserPassword,
     deleteUser,
     addTransfer,
     addWasteLog,

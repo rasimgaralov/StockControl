@@ -7,12 +7,12 @@ import { useLanguage } from '@/context/LanguageContext';
 import Modal from '@/components/Modal';
 
 export default function AyarlarPage() {
-  const { theme, changeTheme, users, updateUser, deleteUser } = useApp();
+  const { theme, changeTheme, users, updateUser, updateUserPassword, deleteUser } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { t } = useLanguage();
 
   const [editingUser, setEditingUser] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', username: '', email: '' });
+  const [editForm, setEditForm] = useState({ name: '', username: '', email: '', password: '' });
   const [userToDelete, setUserToDelete] = useState(null);
 
   const themes = [
@@ -57,14 +57,20 @@ export default function AyarlarPage() {
   };
 
   const openEditUser = (user) => {
-    setEditForm({ name: user.name, username: user.username || '', email: user.email || '' });
+    setEditForm({ name: user.name, username: user.username || '', email: user.email || '', password: '' });
     setEditingUser(user);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (editingUser) {
-      const success = await updateUser(editingUser.id, editForm);
+      const { password, ...updates } = editForm;
+      let success = await updateUser(editingUser.id, updates);
+      
+      if (password) {
+        success = await updateUserPassword(editingUser.id, password);
+      }
+      
       if (success) setEditingUser(null);
     }
   };
@@ -262,6 +268,10 @@ export default function AyarlarPage() {
             <div className="form-group">
               <label className="form-label">{t('settingsPage.colEmail')}</label>
               <input className="form-input" type="email" required value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colPassword') || 'New Password'}</label>
+              <input className="form-input" type="password" placeholder={t('settingsPage.passwordPlaceholder') || 'Leave blank to keep current'} value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} />
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)}>{t('common.cancel')}</button>

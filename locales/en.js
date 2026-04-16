@@ -218,6 +218,8 @@ export const en = {
     colUsername: "Username",
     colEmail: "Email",
     colRole: "Role",
+    colPassword: "New Password",
+    passwordPlaceholder: "Leave blank to keep current",
     colActions: "Actions",
     you: "You",
     editUserTitle: "Edit User",

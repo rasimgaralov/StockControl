@@ -216,6 +216,8 @@ export const ar = {
     colUsername: "اسم المستخدم",
     colEmail: "البريد الإلكتروني",
     colRole: "الدور",
+    colPassword: "كلمة مرور جديدة",
+    passwordPlaceholder: "اتركه فارغًا للاحتفاظ بكلمة المرور الحالية",
     colActions: "الإجراءات",
     you: "أنت",
     editUserTitle: "تعديل المستخدم",
