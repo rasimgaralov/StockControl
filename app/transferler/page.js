@@ -210,7 +210,7 @@ export default function TransferlerPage() {
 
       {/* Filter */}
       <div className="toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', width: '100%', gap: '12px' }}>
+        <div style={{ display: 'flex', width: '100%', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '200px' }}>
             <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
               <option value="all">{t('productsPage.allDepartments')}</option>
@@ -246,21 +246,17 @@ export default function TransferlerPage() {
           <input 
             className="form-input" 
             style={{ width: '140px', background: 'var(--bg-surface)' }} 
-            type={startDate ? "date" : "text"} 
-            placeholder="Select Date"
-            onFocus={(e) => e.target.type = 'date'}
-            onBlur={(e) => { if (!startDate) e.target.type = 'text'; }}
+            type="date"
             value={startDate} 
+            onChange={(e) => setStartDate(e.target.value)} 
+          />
             onChange={(e) => setStartDate(e.target.value)} 
           />
           <span style={{ color: 'var(--text-muted)' }}>-</span>
           <input 
             className="form-input" 
             style={{ width: '140px', background: 'var(--bg-surface)' }} 
-            type={endDate ? "date" : "text"} 
-            placeholder="Select Date"
-            onFocus={(e) => e.target.type = 'date'}
-            onBlur={(e) => { if (!endDate) e.target.type = 'text'; }}
+            type="date"
             value={endDate} 
             onChange={(e) => setEndDate(e.target.value)} 
           />

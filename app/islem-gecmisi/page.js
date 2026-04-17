@@ -210,10 +210,7 @@ export default function IslemGecmisiPage() {
           <input 
             className="form-input" 
             style={{ width: '140px', background: 'var(--bg-surface)' }} 
-            type={startDate ? "date" : "text"} 
-            placeholder="Select Date"
-            onFocus={(e) => e.target.type = 'date'}
-            onBlur={(e) => { if (!startDate) e.target.type = 'text'; }}
+            type="date"
             value={startDate} 
             onChange={(e) => setStartDate(e.target.value)} 
           />
@@ -221,10 +218,7 @@ export default function IslemGecmisiPage() {
           <input 
             className="form-input" 
             style={{ width: '140px', background: 'var(--bg-surface)' }} 
-            type={endDate ? "date" : "text"} 
-            placeholder="Select Date"
-            onFocus={(e) => e.target.type = 'date'}
-            onBlur={(e) => { if (!endDate) e.target.type = 'text'; }}
+            type="date"
             value={endDate} 
             onChange={(e) => setEndDate(e.target.value)} 
           />
