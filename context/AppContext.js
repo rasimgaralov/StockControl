@@ -63,7 +63,8 @@ export function AppProvider({ children }) {
 
   // ═══════════ Activity Logging ═══════════
   const logActivity = useCallback(async (action, targetType, targetId, details) => {
-    const userId = currentUser?.id || 'unknown';
+    if (!currentUser?.id) return;
+    const userId = currentUser.id;
     const logEntry = {
       id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       userId,
@@ -112,7 +113,8 @@ export function AppProvider({ children }) {
 
   // ═══════════ Product Actions ═══════════
   const addProduct = useCallback(async (product) => {
-    const userId = currentUser?.id || 'unknown';
+    if (!currentUser?.id) return;
+    const userId = currentUser.id;
     const newProduct = {
       ...product,
       id: 'p' + Date.now(),
@@ -146,7 +148,8 @@ export function AppProvider({ children }) {
 
   // ═══════════ Transfer Actions ═══════════
   const addTransfer = useCallback(async (transfer) => {
-    const userId = currentUser?.id || 'unknown';
+    if (!currentUser?.id) return;
+    const userId = currentUser.id;
     const newTransfer = {
       ...transfer,
       id: 't' + Date.now(),
@@ -178,7 +181,8 @@ export function AppProvider({ children }) {
 
   // ═══════════ Inbound Actions ═══════════
   const addInbound = useCallback(async (inbound) => {
-    const userId = currentUser?.id || 'unknown';
+    if (!currentUser?.id) return;
+    const userId = currentUser.id;
     const newInbound = {
       ...inbound,
       id: 'i' + Date.now(),
@@ -210,7 +214,8 @@ export function AppProvider({ children }) {
 
   // ═══════════ Waste Actions ═══════════
   const addWasteLog = useCallback(async (wasteLog) => {
-    const userId = currentUser?.id || 'unknown';
+    if (!currentUser?.id) return;
+    const userId = currentUser.id;
     const newWaste = {
       ...wasteLog,
       id: 'w' + Date.now(),
