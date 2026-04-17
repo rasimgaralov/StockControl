@@ -250,8 +250,6 @@ export default function TransferlerPage() {
             value={startDate} 
             onChange={(e) => setStartDate(e.target.value)} 
           />
-            onChange={(e) => setStartDate(e.target.value)} 
-          />
           <span style={{ color: 'var(--text-muted)' }}>-</span>
           <input 
             className="form-input" 
