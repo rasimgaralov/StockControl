@@ -15,6 +15,7 @@ export function AppProvider({ children }) {
   const [wasteLogsList, setWasteLogs] = useState([]);
   const [inboundsList, setInbounds] = useState([]);
   const [deptStockList, setDeptStock] = useState([]);
+  const [invoicesList, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState('light-mint');
 
@@ -27,7 +28,8 @@ export function AppProvider({ children }) {
       { data: dsData },
       { data: tData },
       { data: wData },
-      { data: iData }
+      { data: iData },
+      { data: invData }
     ] = await Promise.all([
       supabase.from('departments').select('*'),
       supabase.from('users').select('id, name, username, email, role, deptId'),
@@ -35,7 +37,8 @@ export function AppProvider({ children }) {
       supabase.from('deptStock').select('*'),
       supabase.from('transfers').select('*'),
       supabase.from('wasteLogs').select('*'),
-      supabase.from('inbounds').select('*')
+      supabase.from('inbounds').select('*'),
+      supabase.from('invoices').select('*').order('uploaded_at', { ascending: false })
     ]);
 
     setDepartments(dData || []);
@@ -45,6 +48,7 @@ export function AppProvider({ children }) {
     setTransfers(tData || []);
     setWasteLogs(wData || []);
     setInbounds(iData || []);
+    setInvoices(invData || []);
     setLoading(false);
   };
 
@@ -401,6 +405,20 @@ export function AppProvider({ children }) {
     return new Date(t.transferredAt).toDateString() === today;
   });
 
+  const addInvoice = async (invoiceData) => {
+    const { data, error } = await supabase.from('invoices').insert([invoiceData]).select();
+    if (error) throw error;
+    if (data) {
+      setInvoices(prev => [data[0], ...prev]);
+    }
+  };
+
+  const deleteInvoice = async (id) => {
+    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    if (error) throw error;
+    setInvoices(prev => prev.filter(inv => inv.id !== id));
+  };
+
   const value = {
     products,
     departments,
@@ -431,6 +449,9 @@ export function AppProvider({ children }) {
     addWasteLog,
     addInbound,
     addBatch,
+    addInvoice,
+    deleteInvoice,
+    invoicesList,
     logActivity,
     refreshData: fetchData,
   };

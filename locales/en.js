@@ -17,20 +17,20 @@ export const en = {
     }
   },
   sidebar: {
-    menu: "Menu",
-    system: "System",
-    home: "Home",
+    dashboard: "Dashboard",
     products: "Products",
-    inbounds: "Inbounds",
-    departments: "Departments",
     transfers: "Transfers",
+    inbounds: "Incoming Stocks",
     waste: "Waste / Loss",
     alerts: "Alerts",
-    settings: "Settings",
-    activityHistory: "Activity History",
-    logout: "Logout",
-    roleAdmin: "Admin",
-    roleUser: "User"
+    activity: "Activity History",
+    invoices: "Invoices",
+    admin: {
+      title: "Admin Panel",
+      users: "User Management",
+      departments: "Departments",
+      settings: "System Settings"
+    }
   },
   dashboard: {
     title: "Dashboard",
@@ -285,8 +285,27 @@ export const en = {
     colAction: "Action",
     colTarget: "Target",
     colDetails: "Details",
-    empty: "No activity records found",
+    empty: "No activity logs found matching the given filters.",
     updated: "updated",
+  },
+  invoicesPage: {
+    title: "Invoices",
+    subtitle: "Manage supplier delivery receipts and invoices",
+    uploadBtn: "Upload Invoice",
+    uploadModalTitle: "Upload New Invoice",
+    capturePhoto: "Capture Photo",
+    capturedPreview: "Preview Image",
+    supplierLabel: "Supplier Name",
+    supplierPlaceholder: "Select or enter supplier...",
+    descLabel: "Description",
+    descPlaceholder: "Optional details...",
+    noInvoices: "No invoices uploaded yet.",
+    searchPlaceholder: "Search by Supplier or Description...",
+    dateRange: "Date Range:",
+    uploadSuccess: "Invoice uploaded successfully!",
+    uploadFailed: "Failed to upload invoice.",
+    deleteConfirm: "Are you sure you want to delete this invoice?",
+    unknownSupplier: "Unknown Supplier"
   },
   login: {
     title: "Login",

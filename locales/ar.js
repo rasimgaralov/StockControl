@@ -17,20 +17,20 @@ export const ar = {
     }
   },
   sidebar: {
-    menu: "القائمة",
-    system: "النظام",
-    home: "الرئيسية",
+    dashboard: "لوحة القيادة",
     products: "المنتجات",
-    inbounds: "واردات المخزون",
-    departments: "الأقسام",
     transfers: "التحويلات",
-    waste: "النفايات / الخسائر",
+    inbounds: "المخزون الوارد",
+    waste: "الهدر / الفقد",
     alerts: "التنبيهات",
-    settings: "الإعدادات",
-    activityHistory: "سجل العمليات",
-    logout: "تسجيل الخروج",
-    roleAdmin: "مدير",
-    roleUser: "مستخدم"
+    activity: "سجل النشاط",
+    invoices: "الفواتير",
+    admin: {
+      title: "لوحة الإدارة",
+      users: "إدارة المستخدمين",
+      departments: "الأقسام",
+      settings: "إعدادات النظام"
+    }
   },
   dashboard: {
     title: "لوحة القيادة",
@@ -283,8 +283,27 @@ export const ar = {
     colAction: "الإجراء",
     colTarget: "الهدف",
     colDetails: "التفاصيل",
-    empty: "لم يتم العثور على سجلات النشاط",
+    empty: "لم يتم العثور على سجلات نشاط تطابق الفلاتر المحددة.",
     updated: "تحديث",
+  },
+  invoicesPage: {
+    title: "الفواتير",
+    subtitle: "إدارة إيصالات وفواتير الموردين",
+    uploadBtn: "رفع فاتورة",
+    uploadModalTitle: "رفع فاتورة جديدة",
+    capturePhoto: "التقاط صورة",
+    capturedPreview: "معاينة الصورة",
+    supplierLabel: "اسم المورد",
+    supplierPlaceholder: "اختر أو أدخل المورد...",
+    descLabel: "الوصف",
+    descPlaceholder: "تفاصيل اختيارية...",
+    noInvoices: "لم يتم رفع فواتير بعد.",
+    searchPlaceholder: "البحث باسم المورد أو الوصف...",
+    dateRange: "نطاق التاريخ:",
+    uploadSuccess: "تم رفع الفاتورة بنجاح!",
+    uploadFailed: "فشل في رفع الفاتورة.",
+    deleteConfirm: "هل أنت متأكد من رغبتك في حذف هذه الفاتورة؟",
+    unknownSupplier: "مورد غير معروف"
   },
   login: {
     title: "تسجيل الدخول",

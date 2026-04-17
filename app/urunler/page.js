@@ -21,7 +21,7 @@ export default function UrunlerPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
@@ -124,14 +124,14 @@ export default function UrunlerPage() {
     if (quickAddQty === "" || quickAddQty === null) return;
     const qtyToAdd = Number(String(quickAddQty).replace(',', '.'));
     if (qtyToAdd < 0) return;
-    
+
     await addBatch({
       productId: quickAddProduct.id,
       quantity: qtyToAdd,
       expiryDate: quickAddExpiry || null,
       supplier: quickAddProduct.supplier_en
     });
-    
+
     setShowQuickAddModal(false);
   };
 
@@ -181,8 +181,8 @@ export default function UrunlerPage() {
           <div>
             <h2>{t('productsPage.title')}</h2>
             <p>
-              {filterDept === 'all' 
-                ? `${products.length} ${t('productsPage.productsRegistered')}` 
+              {filterDept === 'all'
+                ? `${products.length} ${t('productsPage.productsRegistered')}`
                 : `${t('productsPage.productsListedIn')} ${getDeptName(filterDept, lang)}: ${filteredProducts.length}`}
             </p>
           </div>
@@ -299,20 +299,20 @@ export default function UrunlerPage() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="pagination">
-            <button 
-              className="page-btn" 
+            <button
+              className="page-btn"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             >
               {t('productsPage.pagePrevious')}
             </button>
             <span className="page-info">{t('productsPage.pageNumber')} {currentPage} / {totalPages}</span>
-            <button 
-              className="page-btn" 
+            <button
+              className="page-btn"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             >
@@ -336,14 +336,14 @@ export default function UrunlerPage() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">{t('productsPage.qtyLabel')}</label>
-              <input 
-                className="form-input" 
-                type="number" 
-                required 
-                min="0" 
-                step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
-                value={formData.quantity} 
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} 
+              <input
+                className="form-input"
+                type="number"
+                required
+                min="0"
+                step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"}
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               />
             </div>
             <div className="form-group">
@@ -372,24 +372,24 @@ export default function UrunlerPage() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">{t('productsPage.expiryLabel')}</label>
-              <input 
-                className="form-input" 
-                type="date" 
+              <input
+                className="form-input"
+                type="date"
                 min={todayDateStr}
-                value={formData.expiryDate} 
-                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} 
+                value={formData.expiryDate}
+                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
               />
             </div>
             <div className="form-group">
               <label className="form-label">{t('productsPage.thresholdLabel')}</label>
-              <input 
-                className="form-input" 
-                type="number" 
-                required 
-                min={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
-                step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
-                value={formData.criticalThreshold} 
-                onChange={(e) => setFormData({ ...formData, criticalThreshold: e.target.value })} 
+              <input
+                className="form-input"
+                type="number"
+                required
+                min={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"}
+                step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"}
+                value={formData.criticalThreshold}
+                onChange={(e) => setFormData({ ...formData, criticalThreshold: e.target.value })}
               />
             </div>
           </div>
@@ -416,8 +416,8 @@ export default function UrunlerPage() {
           title={lang === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?'}
         >
           <div style={{ padding: '10px 0 20px 0', fontSize: '15px', color: 'var(--text-secondary)' }}>
-            {lang === 'ar' 
-              ? `هل أنت متأكد أنك تريد حذف "${productToDelete.name}"؟ لا يمكن التراجع عن هذا الإجراء.` 
+            {lang === 'ar'
+              ? `هل أنت متأكد أنك تريد حذف "${productToDelete.name}"؟ لا يمكن التراجع عن هذا الإجراء.`
               : `Are you sure you want to delete "${productToDelete.name}"? This action cannot be undone.`}
           </div>
           <div className="modal-footer">
@@ -443,15 +443,15 @@ export default function UrunlerPage() {
             </span>
           </div>
           <div className="form-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <input 
-              className="form-input" 
-              type="number" 
-              required 
+            <input
+              className="form-input"
+              type="number"
+              required
               min="0"
               step={quickAddProduct?.unit_en === 'kg' || quickAddProduct?.unit_en === 'liters' ? "0.001" : "0.1"}
-              value={quickAddQty} 
-              onChange={(e) => setQuickAddQty(e.target.value)} 
-              placeholder="0" 
+              value={quickAddQty}
+              onChange={(e) => setQuickAddQty(e.target.value)}
+              placeholder="0"
               style={{ flex: 1 }}
             />
             <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>
@@ -460,12 +460,12 @@ export default function UrunlerPage() {
           </div>
           <div className="form-group" style={{ marginTop: '15px' }}>
             <label className="form-label">{t('productsPage.expiryLabel') || "Expiry Date"}</label>
-            <input 
-              className="form-input" 
-              type="date" 
+            <input
+              className="form-input"
+              type="date"
               min={todayDateStr}
-              value={quickAddExpiry} 
-              onChange={(e) => setQuickAddExpiry(e.target.value)} 
+              value={quickAddExpiry}
+              onChange={(e) => setQuickAddExpiry(e.target.value)}
             />
           </div>
           <div className="modal-footer" style={{ marginTop: '20px' }}>

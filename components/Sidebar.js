@@ -19,6 +19,7 @@ export default function Sidebar() {
     { label: t('sidebar.departments'), icon: '🏢', href: '/departmanlar' },
     { label: t('sidebar.transfers'), icon: '🔄', href: '/transferler' },
     { label: t('sidebar.waste'), icon: '🗑️', href: '/fire-zayi' },
+    { label: t('sidebar.invoices'), icon: '🧾', href: '/faturalar' },
     { label: t('sidebar.alerts'), icon: '🔔', href: '/alarmlar' },
   ];
 
