@@ -17,20 +17,21 @@ export const en = {
     }
   },
   sidebar: {
-    dashboard: "Dashboard",
+    menu: "Menu",
+    system: "System",
+    home: "Home",
     products: "Products",
-    transfers: "Transfers",
     inbounds: "Incoming Stocks",
+    departments: "Departments",
+    transfers: "Transfers",
     waste: "Waste / Loss",
-    alerts: "Alerts",
-    activity: "Activity History",
     invoices: "Invoices",
-    admin: {
-      title: "Admin Panel",
-      users: "User Management",
-      departments: "Departments",
-      settings: "System Settings"
-    }
+    alerts: "Alerts",
+    settings: "Settings",
+    activityHistory: "Activity History",
+    logout: "Logout",
+    roleAdmin: "Admin",
+    roleUser: "User"
   },
   dashboard: {
     title: "Dashboard",

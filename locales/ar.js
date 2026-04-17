@@ -17,20 +17,21 @@ export const ar = {
     }
   },
   sidebar: {
-    dashboard: "لوحة القيادة",
+    menu: "القائمة",
+    system: "النظام",
+    home: "الرئيسية",
     products: "المنتجات",
-    transfers: "التحويلات",
     inbounds: "المخزون الوارد",
+    departments: "الأقسام",
+    transfers: "التحويلات",
     waste: "الهدر / الفقد",
-    alerts: "التنبيهات",
-    activity: "سجل النشاط",
     invoices: "الفواتير",
-    admin: {
-      title: "لوحة الإدارة",
-      users: "إدارة المستخدمين",
-      departments: "الأقسام",
-      settings: "إعدادات النظام"
-    }
+    alerts: "التنبيهات",
+    settings: "الإعدادات",
+    activityHistory: "سجل العمليات",
+    logout: "تسجيل الخروج",
+    roleAdmin: "مدير",
+    roleUser: "مستخدم"
   },
   dashboard: {
     title: "لوحة القيادة",
