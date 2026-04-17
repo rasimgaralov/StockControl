@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
@@ -312,22 +312,28 @@ export function AppProvider({ children }) {
   // ═══════════ Computed Values ═══════════
   const criticalProducts = products.filter(p => p.quantity <= p.criticalThreshold);
 
-  const activeAlerts = products.flatMap(p => {
-    const pAlerts = [];
-    if (p.quantity <= p.criticalThreshold) {
-      pAlerts.push({ id: 'crit_' + p.id, productId: p.id, alertType: 'critical_stock', triggeredAt: new Date().toISOString() });
-    } else if (p.quantity <= p.criticalThreshold * 1.5) {
-      pAlerts.push({ id: 'low_' + p.id, productId: p.id, alertType: 'low_stock', triggeredAt: new Date().toISOString() });
-    }
+  const activeAlerts = useMemo(() => {
+    return products.flatMap(p => {
+      const pAlerts = [];
+      const threshold = Number(p.criticalThreshold) || 0;
+      const qty = Number(p.quantity) || 0;
 
-    if (p.expiryDate) {
-      const diff = new Date(p.expiryDate) - new Date();
-      if (diff > 0 && diff < 15 * 24 * 60 * 60 * 1000) {
-        pAlerts.push({ id: 'exp_' + p.id, productId: p.id, alertType: 'expiry_warning', triggeredAt: new Date().toISOString() });
+      if (qty <= threshold) {
+        pAlerts.push({ id: 'crit_' + p.id, productId: p.id, alertType: 'critical_stock', triggeredAt: new Date().toISOString() });
+      } else if (threshold > 0 && qty <= threshold * 1.5) {
+        pAlerts.push({ id: 'low_' + p.id, productId: p.id, alertType: 'low_stock', triggeredAt: new Date().toISOString() });
       }
-    }
-    return pAlerts;
-  });
+
+      if (p.expiryDate) {
+        const diff = new Date(p.expiryDate).setHours(23,59,59,999) - new Date();
+        const daysToExpiry = diff / (1000 * 60 * 60 * 24);
+        if (daysToExpiry <= 15) {
+          pAlerts.push({ id: 'exp_' + p.id, productId: p.id, alertType: 'expiry_warning', triggeredAt: new Date().toISOString() });
+        }
+      }
+      return pAlerts;
+    });
+  }, [products]);
   const todayTransfers = transfersList.filter(t => {
     const today = new Date().toDateString();
     return new Date(t.transferredAt).toDateString() === today;
