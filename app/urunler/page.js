@@ -30,6 +30,9 @@ export default function UrunlerPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [quickAddProduct, setQuickAddProduct] = useState(null);
+  const [quickAddQty, setQuickAddQty] = useState("");
   const [formData, setFormData] = useState({
     name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: ''
   });
@@ -105,6 +108,22 @@ export default function UrunlerPage() {
     });
     setEditProduct(product);
     setShowAddModal(true);
+  };
+
+  const openQuickAddModal = (product) => {
+    setQuickAddProduct(product);
+    setQuickAddQty("");
+    setShowQuickAddModal(true);
+  };
+
+  const handleQuickAddSubmit = async (e) => {
+    e.preventDefault();
+    const qtyToAdd = Number(String(quickAddQty).replace(',', '.'));
+    if (!qtyToAdd || qtyToAdd <= 0) return;
+    
+    const newQuantity = quickAddProduct.quantity + qtyToAdd;
+    updateProduct(quickAddProduct.id, { quantity: newQuantity });
+    setShowQuickAddModal(false);
   };
 
   const handleSubmit = (e) => {
@@ -229,7 +248,7 @@ export default function UrunlerPage() {
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {canEdit && (
-                          <button className="btn btn-secondary btn-sm mobile-only" style={{ padding: '2px 6px', fontSize: '11px' }} onClick={() => openEditModal(p)}>✏️</button>
+                          <button className="btn btn-primary btn-sm" style={{ padding: '2px 6px', fontSize: '11px', borderRadius: '4px' }} onClick={() => openQuickAddModal(p)} title={lang === 'ar' ? 'إضافة' : 'Add'}>➕</button>
                         )}
                         <span>{p.name}</span>
                       </div>
@@ -248,10 +267,10 @@ export default function UrunlerPage() {
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         {canEdit && (
-                          <button className="btn btn-secondary btn-sm desktop-only" onClick={() => openEditModal(p)}>✏️</button>
+                          <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} onClick={() => openEditModal(p)}>✏️</button>
                         )}
                         {canDelete && (
-                          <button className="btn btn-danger btn-sm" onClick={() => setProductToDelete(p)}>🗑️</button>
+                          <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => setProductToDelete(p)}>🗑️</button>
                         )}
                       </div>
                     </td>
@@ -383,6 +402,42 @@ export default function UrunlerPage() {
           </div>
         </Modal>
       )}
+
+      {/* Quick Add Modal */}
+      <Modal
+        isOpen={showQuickAddModal}
+        onClose={() => setShowQuickAddModal(false)}
+        title={lang === 'ar' ? 'إضافة سريعة للمخزون' : 'Quick Add Stock'}
+      >
+        <form onSubmit={handleQuickAddSubmit}>
+          <div style={{ marginBottom: '15px', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '14px' }}>
+              {lang === 'ar' ? 'الكمية المضافة لـ' : 'Add stock to'} <strong style={{ color: 'var(--text-primary)' }}>{quickAddProduct?.name}</strong>
+            </span>
+          </div>
+          <div className="form-group" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <input 
+              className="form-input" 
+              type="number" 
+              required 
+              min="0"
+              step={quickAddProduct?.unit_en === 'kg' || quickAddProduct?.unit_en === 'liters' ? "0.001" : "0.1"}
+              value={quickAddQty} 
+              onChange={(e) => setQuickAddQty(e.target.value)} 
+              placeholder="0" 
+              style={{ flex: 1 }}
+            />
+            <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>
+              {quickAddProduct ? (quickAddProduct[`unit_${lang}`] || quickAddProduct.unit_en) : ''}
+            </span>
+          </div>
+          <div className="modal-footer" style={{ marginTop: '20px' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowQuickAddModal(false)}>{t('common.cancel')}</button>
+            <button type="submit" className="btn btn-primary">➕ {t('common.add')}</button>
+          </div>
+        </form>
+      </Modal>
+
     </div>
   );
 }
