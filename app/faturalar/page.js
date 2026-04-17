@@ -22,8 +22,7 @@ export default function FaturalarPage() {
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   // Form State
   const [uploadFile, setUploadFile] = useState(null);
@@ -42,20 +41,16 @@ export default function FaturalarPage() {
       );
     }
     
-    if (startDate) {
-      const sDate = new Date(startDate);
-      sDate.setHours(0,0,0,0);
-      result = result.filter(inv => new Date(inv.uploaded_at) >= sDate);
-    }
-    
-    if (endDate) {
-      const eDate = new Date(endDate);
-      eDate.setHours(23,59,59,999);
-      result = result.filter(inv => new Date(inv.uploaded_at) <= eDate);
+    if (filterDate) {
+      const targetDate = new Date(filterDate).toDateString();
+      result = result.filter(inv => new Date(inv.uploaded_at).toDateString() === targetDate);
     }
 
     return result;
-  }, [invoicesList, searchQuery, startDate, endDate]);
+  }, [invoicesList, searchQuery, filterDate]);
+
+  // Unique Suppliers for Auto-complete
+  const uniqueSuppliers = useMemo(() => [...new Set(invoicesList.map(inv => inv.supplier))].filter(Boolean), [invoicesList]);
 
   // Grouping by Date
   const groupedInvoices = useMemo(() => {
@@ -174,16 +169,8 @@ export default function FaturalarPage() {
             className="form-input" 
             style={{ width: '140px' }} 
             type="date"
-            value={startDate} 
-            onChange={(e) => setStartDate(e.target.value)} 
-          />
-          <span style={{ color: 'var(--text-muted)' }}>-</span>
-          <input 
-            className="form-input" 
-            style={{ width: '140px' }} 
-            type="date"
-            value={endDate} 
-            onChange={(e) => setEndDate(e.target.value)} 
+            value={filterDate} 
+            onChange={(e) => setFilterDate(e.target.value)} 
           />
         </div>
       </div>
@@ -268,10 +255,14 @@ export default function FaturalarPage() {
               <input 
                 className="form-input" 
                 required 
+                list="supplier-opts"
                 value={formData.supplier} 
                 onChange={(e) => setFormData({...formData, supplier: e.target.value})} 
                 placeholder={t('invoicesPage.supplierPlaceholder')}
               />
+              <datalist id="supplier-opts">
+                {uniqueSuppliers.map(s => <option key={s} value={s} />)}
+              </datalist>
             </div>
 
             <div className="form-group">
