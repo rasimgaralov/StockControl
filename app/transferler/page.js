@@ -387,7 +387,12 @@ export default function TransferlerPage() {
           </div>
           <div className="form-group">
             <label className="form-label">{t('transfersPage.qtyLabel')}</label>
-            <input className="form-input" type="number" required min={minVal} step={stepVal} value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} placeholder={t('transfersPage.qtyPlaceholder')} />
+            <div style={{ position: 'relative' }}>
+              <input className="form-input" type="number" required min={minVal} step={stepVal} value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} placeholder={t('transfersPage.qtyPlaceholder')} style={{ paddingRight: '56px' }} />
+              <div style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '13px', fontWeight: '600', pointerEvents: 'none' }}>
+                {selectedProduct ? (selectedProduct[`unit_${lang}`] || selectedProduct.unit_en) : ''}
+              </div>
+            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>

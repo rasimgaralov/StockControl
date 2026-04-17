@@ -29,22 +29,30 @@ export default function Dashboard() {
   });
 
   const activities = [
-    ...transfersList.slice(0, 5).map(t_activity => ({
-      type: 'transfer',
-      icon: '🔄',
-      iconBg: 'var(--color-info-bg)',
-      text: `<strong>${getProductName(t_activity.productId)}</strong> — ${t_activity.quantity} ${t('common.unknown')} ${getDeptName(t_activity.fromDeptId, lang)} → ${getDeptName(t_activity.toDeptId, lang)}`,
-      time: t_activity.transferredAt,
-      user: getUserName(t_activity.transferredBy),
-    })),
-    ...wasteLogsList.slice(0, 3).map(w => ({
-      type: 'waste',
-      icon: '🗑️',
-      iconBg: 'var(--color-danger-bg)',
-      text: `<strong>${getProductName(w.productId)}</strong> — ${w.quantity} ${t('dashboard.wasteLog')}`,
-      time: w.loggedAt,
-      user: getUserName(w.loggedBy),
-    })),
+    ...transfersList.slice(0, 5).map(t_activity => {
+      const prod = products.find(p => p.id === t_activity.productId);
+      const unit = prod ? prod[`unit_${lang}`] || prod.unit_en : '';
+      return {
+        type: 'transfer',
+        icon: '🔄',
+        iconBg: 'var(--color-info-bg)',
+        text: `<strong>${getProductName(t_activity.productId)}</strong> — ${t_activity.quantity} ${unit} ${getDeptName(t_activity.fromDeptId, lang)} → ${getDeptName(t_activity.toDeptId, lang)}`,
+        time: t_activity.transferredAt,
+        user: getUserName(t_activity.transferredBy),
+      };
+    }),
+    ...wasteLogsList.slice(0, 3).map(w => {
+      const prod = products.find(p => p.id === w.productId);
+      const unit = prod ? prod[`unit_${lang}`] || prod.unit_en : '';
+      return {
+        type: 'waste',
+        icon: '🗑️',
+        iconBg: 'var(--color-danger-bg)',
+        text: `<strong>${getProductName(w.productId)}</strong> — ${w.quantity} ${unit} ${t('dashboard.wasteLog')}`,
+        time: w.loggedAt,
+        user: getUserName(w.loggedBy),
+      };
+    }),
   ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 6);
 
   return (

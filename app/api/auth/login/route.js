@@ -27,6 +27,17 @@ export async function POST(request) {
       return Response.json({ error: 'Şifre yanlış' }, { status: 401 });
     }
 
+    // Maintain Activity Log for the backend auth response
+    const logId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    await supabase.from('activity_logs').insert([{
+      id: logId,
+      userId: user.id,
+      action: 'login',
+      targetType: 'system',
+      details: JSON.stringify({ reason: 'User logged into the application' }),
+      createdAt: new Date().toISOString()
+    }]);
+
     // Return user info (without password_hash)
     const { password_hash, ...safeUser } = user;
     return Response.json({ user: safeUser }, { status: 200 });

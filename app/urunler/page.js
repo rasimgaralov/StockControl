@@ -109,6 +109,10 @@ export default function UrunlerPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (formData.expiryDate && formData.expiryDate < todayDateStr) {
+      alert(lang === 'ar' ? 'لا يمكن اختيار تاريخ في الماضي.' : 'Expiry date cannot be in the past.');
+      return;
+    }
     const data = {
       ...formData,
       quantity: Number(formData.quantity),
@@ -116,9 +120,9 @@ export default function UrunlerPage() {
       expiryDate: formData.expiryDate || null,
     };
     if (editProduct) {
-      updateProduct(editProduct.id, data);
+      updateProduct(editProduct.id, data).catch(err => alert("DB Edit Error: " + err));
     } else {
-      addProduct(data);
+      addProduct(data).catch(err => alert("DB Add Error: " + err));
     }
     setShowAddModal(false);
   };

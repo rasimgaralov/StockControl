@@ -60,6 +60,8 @@ export default function FireZayiPage() {
     );
   }
 
+  const selectedProduct = products.find(p => p.id === formData.productId);
+
   return (
     <div className="slide-up">
       <div className="page-header">
@@ -172,7 +174,12 @@ export default function FireZayiPage() {
             </div>
             <div className="form-group">
               <label className="form-label">{t('wastePage.amountLabel')}</label>
-              <input className="form-input" type="number" required min="1" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
+              <div style={{ position: 'relative' }}>
+                <input className="form-input" type="number" required min="1" step={selectedProduct && ['kg', 'liters'].includes(selectedProduct.unit_en) ? "0.001" : "0.1"} value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} style={{ paddingRight: '56px' }} />
+                <div style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '13px', fontWeight: '600', pointerEvents: 'none' }}>
+                  {selectedProduct ? (selectedProduct[`unit_${lang}`] || selectedProduct.unit_en) : ''}
+                </div>
+              </div>
             </div>
           </div>
           <div className="form-group">
