@@ -160,19 +160,25 @@ export default function GelenStoklarPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map(iItem => (
-                  <tr key={iItem.id}>
-                    <td style={{ whiteSpace: 'nowrap' }}>{formatDateTime(iItem.receivedAt)}</td>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{getProductName(iItem.productId)}</td>
-                    <td>
-                      <span className="badge badge-purple">
-                        {iItem.supplier || '-'}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>+{iItem.quantity}</td>
-                    <td>{getUserName(iItem.receivedBy)}</td>
-                  </tr>
-                ))
+                filtered.map(iItem => {
+                  const p = products.find(prod => prod.id === iItem.productId);
+                  const unit = p ? (p[`unit_${lang}`] || p.unit_en) : '';
+                  return (
+                    <tr key={iItem.id}>
+                      <td style={{ whiteSpace: 'nowrap' }}>{formatDateTime(iItem.receivedAt)}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{getProductName(iItem.productId)}</td>
+                      <td>
+                        <span className="badge badge-purple">
+                          {iItem.supplier || '-'}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>
+                        +{iItem.quantity} <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600', marginLeft: '4px' }}>{unit}</span>
+                      </td>
+                      <td>{getUserName(iItem.receivedBy)}</td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
