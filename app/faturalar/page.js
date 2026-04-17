@@ -17,6 +17,7 @@ export default function FaturalarPage() {
   const canDelete = hasPermission('delete'); 
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [invoiceToEdit, setInvoiceToEdit] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
   const [viewImage, setViewImage] = useState(null);
@@ -82,47 +83,60 @@ export default function FaturalarPage() {
     }
   };
 
-  const handleUploadSubmit = async (e) => {
+  const openEditModal = (inv) => {
+    setInvoiceToEdit(inv);
+    setFormData({ supplier: inv.supplier, description: inv.description || '' });
+    setPreviewUrl(inv.image_url);
+    setUploadFile(null);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setInvoiceToEdit(null);
+    setUploadFile(null);
+    setPreviewUrl(null);
+    setFormData({ supplier: '', description: '' });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!uploadFile || !formData.supplier.trim()) return;
+    if (!formData.supplier.trim()) return;
+    if (!invoiceToEdit && !uploadFile) return;
+
     setIsUploading(true);
     
     try {
-      const fileExt = uploadFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `receipts/${fileName}`;
-
-      // Insert file to supabase storage
-      const { error: uploadError } = await supabase.storage
-        .from('invoices')
-        .upload(filePath, uploadFile);
-
-      if (uploadError) throw uploadError;
-
-      // Retreive Public URL
-      const { data: publicUrlData } = supabase.storage
-        .from('invoices')
-        .getPublicUrl(filePath);
+      let finalImageUrl = invoiceToEdit ? invoiceToEdit.image_url : null;
+      if (uploadFile) {
+        const fileExt = uploadFile.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `receipts/${fileName}`;
+        const { error: uploadError } = await supabase.storage.from('invoices').upload(filePath, uploadFile);
+        if (uploadError) throw uploadError;
+        const { data: pUrl } = supabase.storage.from('invoices').getPublicUrl(filePath);
+        finalImageUrl = pUrl.publicUrl;
+      }
 
       const dbPayload = {
-        image_url: publicUrlData.publicUrl,
+        image_url: finalImageUrl,
         supplier: formData.supplier,
-        description: formData.description || '',
-        uploaded_by: currentUser.id
+        description: formData.description || ''
       };
 
-      await addInvoice(dbPayload);
-      logActivity('add', 'invoice', null, `Uploaded invoice for supplier ${formData.supplier}`);
+      if (invoiceToEdit) {
+        await updateInvoice(invoiceToEdit.id, dbPayload);
+        logActivity('edit', 'invoice', invoiceToEdit.id, `Updated invoice for supplier ${formData.supplier}`);
+        alert(t('invoicesPage.updateSuccess'));
+      } else {
+        dbPayload.uploaded_by = currentUser.id;
+        await addInvoice(dbPayload);
+        logActivity('add', 'invoice', null, `Uploaded invoice for supplier ${formData.supplier}`);
+        alert(t('invoicesPage.uploadSuccess'));
+      }
       
-      // Reset logic
-      setShowAddModal(false);
-      setUploadFile(null);
-      setPreviewUrl(null);
-      setFormData({ supplier: '', description: '' });
-      alert(t('invoicesPage.uploadSuccess'));
-
+      handleCloseModal();
     } catch (err) {
-      alert(t('invoicesPage.uploadFailed') + ": " + err.message);
+      alert((invoiceToEdit ? t('invoicesPage.updateFailed') : t('invoicesPage.uploadFailed')) + ": " + err.message);
     } finally {
       setIsUploading(false);
     }
@@ -239,15 +253,26 @@ export default function FaturalarPage() {
                           {new Date(inv.uploaded_at).toLocaleTimeString(lang === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
-                      {canDelete && (
-                        <button 
-                          className="btn btn-danger btn-sm"
-                          style={{ padding: '6px', borderRadius: '8px' }}
-                          onClick={() => setInvoiceToDelete(inv)}
-                        >
-                          🗑️
-                        </button>
-                      )}
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {canEdit && (
+                          <button 
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '6px', borderRadius: '8px' }}
+                            onClick={() => openEditModal(inv)}
+                          >
+                            ✏️
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button 
+                            className="btn btn-danger btn-sm"
+                            style={{ padding: '6px', borderRadius: '8px' }}
+                            onClick={() => setInvoiceToDelete(inv)}
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -257,9 +282,9 @@ export default function FaturalarPage() {
         )}
       </div>
 
-      {showAddModal && (
-        <Modal isOpen={true} onClose={() => setShowAddModal(false)} title={t('invoicesPage.uploadModalTitle')}>
-          <form onSubmit={handleUploadSubmit}>
+      {(showAddModal || invoiceToEdit) && (
+        <Modal isOpen={true} onClose={handleCloseModal} title={invoiceToEdit ? t('invoicesPage.editModalTitle') : t('invoicesPage.uploadModalTitle')}>
+          <form onSubmit={handleSubmit}>
             <div className="form-group" style={{ textAlign: 'center' }}>
               {!previewUrl ? (
                 <label style={{
@@ -315,8 +340,8 @@ export default function FaturalarPage() {
             </div>
 
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>{t('common.cancel') || 'Cancel'}</button>
-              <button type="submit" className="btn btn-primary" disabled={isUploading || !uploadFile}>
+              <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>{t('common.cancel') || 'Cancel'}</button>
+              <button type="submit" className="btn btn-primary" disabled={isUploading || (!invoiceToEdit && !uploadFile)}>
                 {isUploading ? '...' : t('common.save') || 'Save'}
               </button>
             </div>

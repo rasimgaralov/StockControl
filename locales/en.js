@@ -305,6 +305,9 @@ export const en = {
     dateRange: "Date Range:",
     uploadSuccess: "Invoice uploaded successfully!",
     uploadFailed: "Failed to upload invoice.",
+    editModalTitle: "Edit Invoice",
+    updateSuccess: "Invoice updated successfully!",
+    updateFailed: "Failed to update invoice.",
     deleteConfirm: "Are you sure you want to delete this invoice?",
     unknownSupplier: "Unknown Supplier"
   },

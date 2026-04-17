@@ -303,6 +303,9 @@ export const ar = {
     dateRange: "نطاق التاريخ:",
     uploadSuccess: "تم رفع الفاتورة بنجاح!",
     uploadFailed: "فشل في رفع الفاتورة.",
+    editModalTitle: "تعديل الفاتورة",
+    updateSuccess: "تم تحديث الفاتورة بنجاح!",
+    updateFailed: "فشل في تحديث الفاتورة.",
     deleteConfirm: "هل أنت متأكد من رغبتك في حذف هذه الفاتورة؟",
     unknownSupplier: "مورد غير معروف"
   },

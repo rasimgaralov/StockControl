@@ -419,6 +419,14 @@ export function AppProvider({ children }) {
     setInvoices(prev => prev.filter(inv => inv.id !== id));
   };
 
+  const updateInvoice = async (id, updates) => {
+    const { data, error } = await supabase.from('invoices').update(updates).eq('id', id).select();
+    if (error) throw error;
+    if (data && data.length > 0) {
+      setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, ...data[0] } : inv));
+    }
+  };
+
   const value = {
     products,
     departments,
@@ -450,6 +458,7 @@ export function AppProvider({ children }) {
     addInbound,
     addBatch,
     addInvoice,
+    updateInvoice,
     deleteInvoice,
     invoicesList,
     logActivity,
