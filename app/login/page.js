@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t, lang, changeLanguage } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -32,6 +34,20 @@ export default function LoginPage() {
       background: 'linear-gradient(135deg, #0c1c18 0%, #1a3830 40%, #0f2922 100%)',
       padding: '20px',
     }}>
+      {/* Language Switcher */}
+      <div style={{ position: 'absolute', top: '24px', right: '24px', display: 'flex', gap: '8px', zIndex: 10 }}>
+        <button 
+          type="button"
+          onClick={() => changeLanguage('en')}
+          style={{ background: lang === 'en' ? 'var(--accent-primary, #059669)' : 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 600, transition: '0.2s' }}
+        >EN</button>
+        <button 
+          type="button"
+          onClick={() => changeLanguage('ar')}
+          style={{ background: lang === 'ar' ? 'var(--accent-primary, #059669)' : 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 600, transition: '0.2s' }}
+        >AR</button>
+      </div>
+
       <div style={{
         width: '100%',
         maxWidth: '420px',
@@ -100,13 +116,13 @@ export default function LoginPage() {
               marginBottom: '8px',
               letterSpacing: '0.3px',
             }}>
-              Kullanıcı Adı
+              {t('login.username')}
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Kullanıcı adınızı girin"
+              placeholder={t('login.username')}
               required
               autoFocus
               style={{
@@ -142,13 +158,13 @@ export default function LoginPage() {
               marginBottom: '8px',
               letterSpacing: '0.3px',
             }}>
-              Şifre
+              {t('login.password')}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Şifrenizi girin"
+              placeholder={t('login.password')}
               required
               style={{
                 width: '100%',
@@ -194,7 +210,7 @@ export default function LoginPage() {
               letterSpacing: '0.3px',
             }}
           >
-            {loading ? '⏳ Giriş yapılıyor...' : '🔐 Giriş Yap'}
+            {loading ? `⏳ ${t('login.logging')}` : `🔐 ${t('login.loginBtn')}`}
           </button>
         </form>
 
@@ -205,7 +221,7 @@ export default function LoginPage() {
           color: '#64748b',
           fontWeight: '500',
         }}>
-          Stok Yönetim Sistemi v1.0
+          Stock Control System v1.0
         </div>
       </div>
     </div>

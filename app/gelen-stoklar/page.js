@@ -21,11 +21,7 @@ export default function GelenStoklarPage() {
   // Inbounds list safely assigned
   const inbounds = inboundsList || [];
 
-  const filteredModalProducts = useMemo(() => {
-    if (!productSearch || !showDropdown) return products;
-    const q = productSearch.toLowerCase();
-    return products.filter(p => p.name.toLowerCase().includes(q));
-  }, [products, productSearch, showDropdown]);
+
 
   const filtered = useMemo(() => {
     let result = inbounds;
