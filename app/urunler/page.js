@@ -121,8 +121,9 @@ export default function UrunlerPage() {
 
   const handleQuickAddSubmit = async (e) => {
     e.preventDefault();
+    if (quickAddQty === "" || quickAddQty === null) return;
     const qtyToAdd = Number(String(quickAddQty).replace(',', '.'));
-    if (!qtyToAdd || qtyToAdd <= 0) return;
+    if (qtyToAdd < 0) return;
     
     await addBatch({
       productId: quickAddProduct.id,
@@ -339,7 +340,7 @@ export default function UrunlerPage() {
                 className="form-input" 
                 type="number" 
                 required 
-                min={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
+                min="0" 
                 step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
                 value={formData.quantity} 
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} 
