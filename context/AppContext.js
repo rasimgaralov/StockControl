@@ -124,6 +124,19 @@ export function AppProvider({ children }) {
     if (!error) {
       setProducts(prev => [...prev, newProduct]);
       logActivity('add', 'product', newProduct.id, { name: newProduct.name, quantity: newProduct.quantity });
+      
+      if (newProduct.quantity && newProduct.quantity > 0) {
+        const newInbound = {
+          id: 'i' + Date.now(),
+          productId: newProduct.id,
+          quantity: newProduct.quantity,
+          supplier: newProduct.supplier_en || newProduct.supplier_ar || 'Initial Stock',
+          receivedBy: userId,
+        };
+        supabase.from('inbounds').insert([newInbound]).then(({error: inError}) => {
+          if (!inError) setInbounds(prev => [newInbound, ...prev]);
+        });
+      }
     }
     return newProduct;
   }, [currentUser, logActivity]);
@@ -134,8 +147,22 @@ export function AppProvider({ children }) {
       const oldProduct = products.find(p => p.id === id);
       setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
       logActivity('edit', 'product', id, { name: oldProduct?.name, changes: updates });
+      
+      if (updates.quantity !== undefined && oldProduct && updates.quantity > oldProduct.quantity) {
+        const addedQty = updates.quantity - oldProduct.quantity;
+        const newInbound = {
+          id: 'i' + Date.now(),
+          productId: id,
+          quantity: addedQty,
+          supplier: updates.supplier_en || oldProduct?.supplier_en || 'Stock Update',
+          receivedBy: currentUser?.id || 'unknown',
+        };
+        supabase.from('inbounds').insert([newInbound]).then(({error: inError}) => {
+          if (!inError) setInbounds(prev => [newInbound, ...prev]);
+        });
+      }
     }
-  }, [products, logActivity]);
+  }, [products, logActivity, currentUser]);
 
   const deleteProduct = useCallback(async (id) => {
     const oldProduct = products.find(p => p.id === id);
