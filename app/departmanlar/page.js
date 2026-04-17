@@ -13,11 +13,11 @@ export default function DepartmanlarPage() {
   const deptSummaries = useMemo(() => {
     return departments.map(dept => {
       const deptProducts = products.filter(p => p.deptId === dept.id);
-      const totalQty = deptProducts.reduce((sum, p) => sum + p.quantity, 0);
+      const inStockCount = deptProducts.filter(p => p.quantity > 0).length;
       const criticalCount = deptProducts.filter(p => p.quantity <= p.criticalThreshold).length;
       return {
         ...dept,
-        totalQty,
+        inStockCount,
         productCount: deptProducts.length,
         criticalCount,
         products: deptProducts,
@@ -66,7 +66,7 @@ export default function DepartmanlarPage() {
             </div>
             <div className="dept-card-stats">
               <div className="dept-stat">
-                <div className="dept-stat-value">{dept.totalQty}</div>
+                <div className="dept-stat-value">{dept.inStockCount}/{dept.productCount}</div>
                 <div className="dept-stat-label">{t('departmentsPage.totalStock')}</div>
               </div>
               <div className="dept-stat">
@@ -76,12 +76,12 @@ export default function DepartmanlarPage() {
                 <div className="dept-stat-label">{t('departmentsPage.criticalProduct')}</div>
               </div>
             </div>
-            {dept.criticalCount > 0 && (
+            {dept.productCount > 0 && (
               <div style={{ marginTop: '14px' }}>
                 <div className="progress-bar">
                   <div
-                    className={`progress-fill ${dept.criticalCount > 2 ? 'red' : dept.criticalCount > 0 ? 'yellow' : 'green'}`}
-                    style={{ width: `${Math.min(100, (dept.criticalCount / dept.productCount) * 100)}%` }}
+                    className={`progress-fill ${dept.inStockCount === dept.productCount ? 'green' : (dept.inStockCount < dept.productCount / 2 ? 'red' : 'yellow')}`}
+                    style={{ width: `${Math.min(100, (dept.inStockCount / dept.productCount) * 100)}%` }}
                   />
                 </div>
               </div>
