@@ -203,6 +203,7 @@ export default function FaturalarPage() {
         <input 
           type="text" 
           className="form-input" 
+          style={{ background: 'var(--bg-surface)' }}
           placeholder={t('invoicesPage.searchPlaceholder')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
@@ -211,7 +212,7 @@ export default function FaturalarPage() {
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t('invoicesPage.dateRange')}</span>
           <input 
             className="form-input" 
-            style={{ width: '140px' }} 
+            style={{ width: '140px', background: 'var(--bg-surface)' }} 
             type="date"
             value={startDate} 
             onChange={(e) => setStartDate(e.target.value)} 
@@ -219,7 +220,7 @@ export default function FaturalarPage() {
           <span style={{ color: 'var(--text-muted)' }}>-</span>
           <input 
             className="form-input" 
-            style={{ width: '140px' }} 
+            style={{ width: '140px', background: 'var(--bg-surface)' }} 
             type="date"
             value={endDate} 
             onChange={(e) => setEndDate(e.target.value)} 
