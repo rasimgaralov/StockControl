@@ -267,7 +267,7 @@ export default function UrunlerPage() {
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {canEdit && (
-                          <button className="btn btn-primary btn-sm" style={{ padding: '2px 6px', fontSize: '11px', borderRadius: '4px' }} onClick={() => openQuickAddModal(p)} title={lang === 'ar' ? 'إضافة' : 'Add'}>➕</button>
+                          <button className="btn btn-primary btn-sm" style={{ padding: '2px 8px', fontSize: '16px', fontWeight: 'bold', color: '#ffffff', borderRadius: '4px', lineHeight: '1' }} onClick={() => openQuickAddModal(p)} title={lang === 'ar' ? 'إضافة' : 'Add'}>+</button>
                         )}
                         <span>{p.name}</span>
                       </div>
