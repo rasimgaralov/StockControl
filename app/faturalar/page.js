@@ -22,7 +22,8 @@ export default function FaturalarPage() {
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   // Form State
   const [uploadFile, setUploadFile] = useState(null);
@@ -41,13 +42,20 @@ export default function FaturalarPage() {
       );
     }
     
-    if (filterDate) {
-      const targetDate = new Date(filterDate).toDateString();
-      result = result.filter(inv => new Date(inv.uploaded_at).toDateString() === targetDate);
+    if (startDate) {
+      const sDate = new Date(startDate);
+      sDate.setHours(0,0,0,0);
+      result = result.filter(inv => new Date(inv.uploaded_at) >= sDate);
+    }
+    
+    if (endDate) {
+      const eDate = new Date(endDate);
+      eDate.setHours(23,59,59,999);
+      result = result.filter(inv => new Date(inv.uploaded_at) <= eDate);
     }
 
     return result;
-  }, [invoicesList, searchQuery, filterDate]);
+  }, [invoicesList, searchQuery, startDate, endDate]);
 
   // Unique Suppliers for Auto-complete
   const uniqueSuppliers = useMemo(() => [...new Set(invoicesList.map(inv => inv.supplier))].filter(Boolean), [invoicesList]);
@@ -169,8 +177,16 @@ export default function FaturalarPage() {
             className="form-input" 
             style={{ width: '140px' }} 
             type="date"
-            value={filterDate} 
-            onChange={(e) => setFilterDate(e.target.value)} 
+            value={startDate} 
+            onChange={(e) => setStartDate(e.target.value)} 
+          />
+          <span style={{ color: 'var(--text-muted)' }}>-</span>
+          <input 
+            className="form-input" 
+            style={{ width: '140px' }} 
+            type="date"
+            value={endDate} 
+            onChange={(e) => setEndDate(e.target.value)} 
           />
         </div>
       </div>
