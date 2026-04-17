@@ -17,6 +17,8 @@ export default function GelenStoklarPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showMobileDatePicker, setShowMobileDatePicker] = useState(false);
+  const [sortBy, setSortBy] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
 
   // Inbounds list safely assigned
   const inbounds = inboundsList || [];
@@ -35,8 +37,21 @@ export default function GelenStoklarPage() {
       eDate.setHours(23,59,59,999);
       result = result.filter(i => new Date(i.receivedAt) <= eDate);
     }
+    
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === 'date') {
+        cmp = new Date(a.receivedAt) - new Date(b.receivedAt);
+      } else if (sortBy === 'name') {
+        const nameA = getProductName(a.productId) || '';
+        const nameB = getProductName(b.productId) || '';
+        cmp = nameA.localeCompare(nameB, 'tr');
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
     return result;
-  }, [inbounds, startDate, endDate]);
+  }, [inbounds, startDate, endDate, sortBy, sortDir, getProductName]);
 
 
 
@@ -96,6 +111,18 @@ export default function GelenStoklarPage() {
       {/* Filter */}
       <div className="toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', width: '100%', gap: '12px', justifyContent: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: '150px' }}>
+            <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={`${sortBy}-${sortDir}`} onChange={(e) => {
+              const parts = e.target.value.split('-');
+              setSortBy(parts[0]);
+              setSortDir(parts[1]);
+            }}>
+              <option value="name-asc">{t('common.sortOptions.az')}</option>
+              <option value="name-desc">{t('common.sortOptions.za')}</option>
+              <option value="date-desc">{t('common.sortOptions.newest')}</option>
+              <option value="date-asc">{t('common.sortOptions.oldest')}</option>
+            </select>
+          </div>
           <button 
             className="btn btn-secondary mobile-only" 
             onClick={() => setShowMobileDatePicker(!showMobileDatePicker)}

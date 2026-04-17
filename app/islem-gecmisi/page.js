@@ -45,6 +45,8 @@ export default function IslemGecmisiPage() {
   const [filterUser, setFilterUser] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -79,8 +81,21 @@ export default function IslemGecmisiPage() {
       eDate.setHours(23,59,59,999);
       result = result.filter(l => new Date(l.createdAt) <= eDate);
     }
+
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === 'date') {
+        cmp = new Date(a.createdAt) - new Date(b.createdAt);
+      } else if (sortBy === 'name') {
+        const uA = users.find(u => u.id === a.userId)?.name || '';
+        const uB = users.find(u => u.id === b.userId)?.name || '';
+        cmp = uA.localeCompare(uB, 'tr');
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
     return result;
-  }, [logs, filterAction, filterUser, startDate, endDate]);
+  }, [logs, filterAction, filterUser, startDate, endDate, sortBy, sortDir, users]);
 
   const getTargetTypeLabel = (type) => {
     const labels = {
@@ -178,6 +193,16 @@ export default function IslemGecmisiPage() {
             {users.map(u => (
               <option key={u.id} value={u.id}>{u.name}</option>
             ))}
+          </select>
+          <select className="filter-select" style={{ minWidth: '150px' }} value={`${sortBy}-${sortDir}`} onChange={(e) => {
+            const parts = e.target.value.split('-');
+            setSortBy(parts[0]);
+            setSortDir(parts[1]);
+          }}>
+            <option value="name-asc">{t('common.sortOptions.az')}</option>
+            <option value="name-desc">{t('common.sortOptions.za')}</option>
+            <option value="date-desc">{t('common.sortOptions.newest')}</option>
+            <option value="date-asc">{t('common.sortOptions.oldest')}</option>
           </select>
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>

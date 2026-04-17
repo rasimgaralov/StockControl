@@ -7,7 +7,14 @@ export const ar = {
     delete: "حذف",
     edit: "تعديل",
     add: "إضافة",
-    close: "إغلاق"
+    close: "إغلاق",
+    sortOptions: {
+      title: "ترتيب حسب",
+      az: "الاسم (أ-ي)",
+      za: "الاسم (ي-أ)",
+      newest: "الأحدث أولاً",
+      oldest: "الأقدم أولاً"
+    }
   },
   sidebar: {
     menu: "القائمة",

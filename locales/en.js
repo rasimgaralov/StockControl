@@ -7,7 +7,14 @@ export const en = {
     delete: "Delete",
     edit: "Edit",
     add: "Add",
-    close: "Close"
+    close: "Close",
+    sortOptions: {
+      title: "Sort By",
+      az: "Name (A-Z)",
+      za: "Name (Z-A)",
+      newest: "Newest First",
+      oldest: "Oldest First"
+    }
   },
   sidebar: {
     menu: "Menu",

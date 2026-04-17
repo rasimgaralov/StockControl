@@ -15,6 +15,9 @@ export default function FireZayiPage() {
   const canAdd = hasPermission('add');
 
   const [showModal, setShowModal] = useState(false);
+  const [sortBy, setSortBy] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
+  
   const [formData, setFormData] = useState({
     productId: '', deptId: '', quantity: '', reason_en: '', reason_ar: ''
   });
@@ -26,7 +29,24 @@ export default function FireZayiPage() {
       map[w.deptId] = (map[w.deptId] || 0) + w.quantity;
     });
     return map;
+    return map;
   }, [wasteLogsList]);
+
+  const filteredWaste = useMemo(() => {
+    let result = [...wasteLogsList];
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === 'date') {
+        cmp = new Date(a.loggedAt) - new Date(b.loggedAt);
+      } else if (sortBy === 'name') {
+        const nameA = getProductName(a.productId) || '';
+        const nameB = getProductName(b.productId) || '';
+        cmp = nameA.localeCompare(nameB, 'tr');
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return result;
+  }, [wasteLogsList, sortBy, sortDir, getProductName]);
 
   const openModal = () => {
     setFormData({
@@ -75,6 +95,23 @@ export default function FireZayiPage() {
               ➕ {t('wastePage.newRecord')}
             </button>
           )}
+        </div>
+      </div>
+
+      <div className="toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', width: '100%', gap: '12px', justifyContent: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: '150px' }}>
+            <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={`${sortBy}-${sortDir}`} onChange={(e) => {
+              const parts = e.target.value.split('-');
+              setSortBy(parts[0]);
+              setSortDir(parts[1]);
+            }}>
+              <option value="name-asc">{t('common.sortOptions.az')}</option>
+              <option value="name-desc">{t('common.sortOptions.za')}</option>
+              <option value="date-desc">{t('common.sortOptions.newest')}</option>
+              <option value="date-asc">{t('common.sortOptions.oldest')}</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -132,7 +169,7 @@ export default function FireZayiPage() {
                   </td>
                 </tr>
               ) : (
-                wasteLogsList.map(w => (
+                filteredWaste.map(w => (
                   <tr key={w.id}>
                     <td style={{ whiteSpace: 'nowrap' }}>{formatDateTime(w.loggedAt)}</td>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{getProductName(w.productId)}</td>

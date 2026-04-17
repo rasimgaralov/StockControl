@@ -69,6 +69,7 @@ export default function UrunlerPage() {
       if (sortBy === 'name') cmp = a.name.localeCompare(b.name, 'tr');
       else if (sortBy === 'quantity') cmp = a.quantity - b.quantity;
       else if (sortBy === 'expiry') cmp = (a.expiryDate || 'z').localeCompare(b.expiryDate || 'z');
+      else if (sortBy === 'date') cmp = a.id.localeCompare(b.id, 'en');
       return sortDir === 'asc' ? cmp : -cmp;
     });
 
@@ -214,6 +215,16 @@ export default function UrunlerPage() {
           <option value="critical">{t('productsPage.status.critical')}</option>
           <option value="warning">{t('productsPage.status.warning')}</option>
           <option value="normal">{t('productsPage.status.normal')}</option>
+        </select>
+        <select className="filter-select" value={`${sortBy}-${sortDir}`} onChange={(e) => {
+          const parts = e.target.value.split('-');
+          setSortBy(parts[0]);
+          setSortDir(parts[1]);
+        }}>
+          <option value="name-asc">{t('common.sortOptions.az')}</option>
+          <option value="name-desc">{t('common.sortOptions.za')}</option>
+          <option value="date-desc">{t('common.sortOptions.newest')}</option>
+          <option value="date-asc">{t('common.sortOptions.oldest')}</option>
         </select>
       </div>
 

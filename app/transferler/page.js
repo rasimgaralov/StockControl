@@ -19,6 +19,8 @@ export default function TransferlerPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showMobileDatePicker, setShowMobileDatePicker] = useState(false);
+  const [sortBy, setSortBy] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
   
   const [formData, setFormData] = useState({
     productId: '', fromDeptId: '', toDeptId: '', quantity: ''
@@ -53,8 +55,21 @@ export default function TransferlerPage() {
       eDate.setHours(23,59,59,999);
       result = result.filter(t => new Date(t.transferredAt) <= eDate);
     }
+    
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === 'date') {
+        cmp = new Date(a.transferredAt) - new Date(b.transferredAt);
+      } else if (sortBy === 'name') {
+        const nameA = getProductName(a.productId) || '';
+        const nameB = getProductName(b.productId) || '';
+        cmp = nameA.localeCompare(nameB, 'tr');
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
     return result;
-  }, [transfersList, filterDept, startDate, endDate]);
+  }, [transfersList, filterDept, startDate, endDate, sortBy, sortDir, getProductName]);
 
   const openModal = () => {
     const warehouseDept = departments.find(d => d.name_en === 'Warehouse' || d.name_en === 'Depo') || departments[0];
@@ -202,6 +217,18 @@ export default function TransferlerPage() {
               {departments.map(d => (
                 <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
               ))}
+            </select>
+          </div>
+          <div style={{ flex: 1, minWidth: '150px' }}>
+            <select className="filter-select" style={{ width: '100%', border: '1px solid var(--border-color)', padding: '12px', borderRadius: 'var(--radius-sm)' }} value={`${sortBy}-${sortDir}`} onChange={(e) => {
+              const parts = e.target.value.split('-');
+              setSortBy(parts[0]);
+              setSortDir(parts[1]);
+            }}>
+              <option value="name-asc">{t('common.sortOptions.az')}</option>
+              <option value="name-desc">{t('common.sortOptions.za')}</option>
+              <option value="date-desc">{t('common.sortOptions.newest')}</option>
+              <option value="date-asc">{t('common.sortOptions.oldest')}</option>
             </select>
           </div>
           <button 

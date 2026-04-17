@@ -15,6 +15,8 @@ function AlarmlarContent() {
   
   const [filter, setFilter] = useState(initialFilter);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
   
   // Stock Editing Modal
   const [showEditModal, setShowEditModal] = useState(false);
@@ -55,8 +57,21 @@ function AlarmlarContent() {
         return p && p.name.toLowerCase().includes(q);
       });
     }
+    
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === 'date') {
+        cmp = new Date(a.triggeredAt) - new Date(b.triggeredAt);
+      } else if (sortBy === 'name') {
+        const pA = getProductById(a.productId);
+        const pB = getProductById(b.productId);
+        cmp = (pA ? pA.name : '').localeCompare(pB ? pB.name : '', 'tr');
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
     return result;
-  }, [activeAlerts, search, filter, getProductById]);
+  }, [activeAlerts, search, filter, getProductById, sortBy, sortDir]);
 
   // Hacky effect hook alternative from useMemo.
   useMemo(() => {
@@ -128,6 +143,22 @@ function AlarmlarContent() {
             <option value="critical_stock">{t('alarmsPage.filterCritical')}</option>
             <option value="low_stock">{t('alarmsPage.filterLow')}</option>
             <option value="expiry_warning">{t('alarmsPage.filterExpiry')}</option>
+          </select>
+        </div>
+        <div style={{ flex: '0 0 auto' }}>
+          <select 
+            className="filter-select"
+            value={`${sortBy}-${sortDir}`} 
+            onChange={(e) => {
+              const parts = e.target.value.split('-');
+              setSortBy(parts[0]);
+              setSortDir(parts[1]);
+            }}
+          >
+            <option value="name-asc">{t('common.sortOptions.az')}</option>
+            <option value="name-desc">{t('common.sortOptions.za')}</option>
+            <option value="date-desc">{t('common.sortOptions.newest')}</option>
+            <option value="date-asc">{t('common.sortOptions.oldest')}</option>
           </select>
         </div>
       </div>
