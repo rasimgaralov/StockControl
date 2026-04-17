@@ -20,6 +20,7 @@ export default function FaturalarPage() {
   const [invoiceToEdit, setInvoiceToEdit] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const [deleteStep, setDeleteStep] = useState(1);
   const [viewImage, setViewImage] = useState(null);
   
   // Filters
@@ -155,6 +156,7 @@ export default function FaturalarPage() {
       await deleteInvoice(invoiceToDelete.id);
       logActivity('delete', 'invoice', invoiceToDelete.id, `Removed invoice representing ${invoiceToDelete.supplier}`);
       setInvoiceToDelete(null);
+      setDeleteStep(1);
     } catch(err) {
       console.error(err);
     }
@@ -350,15 +352,30 @@ export default function FaturalarPage() {
       )}
 
       {invoiceToDelete && (
-        <Modal isOpen={true} onClose={() => setInvoiceToDelete(null)} title={t('invoicesPage.title')}>
-          <div style={{ padding: '10px 0 20px 0', fontSize: '15px' }}>
-            {t('invoicesPage.deleteConfirm')} <br/>
-            <strong>{invoiceToDelete.supplier}</strong>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setInvoiceToDelete(null)}>{t('common.cancel')}</button>
-            <button className="btn btn-danger" onClick={confirmDelete}>{lang==='ar'?'حذف':'Delete'}</button>
-          </div>
+        <Modal isOpen={true} onClose={() => { setInvoiceToDelete(null); setDeleteStep(1); }} title={t('invoicesPage.title')}>
+          {deleteStep === 1 ? (
+            <>
+              <div style={{ padding: '10px 0 20px 0', fontSize: '15px' }}>
+                {t('invoicesPage.deleteConfirm')} <br/>
+                <strong>{invoiceToDelete.supplier}</strong>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => { setInvoiceToDelete(null); setDeleteStep(1); }}>{t('common.cancel') || 'Cancel'}</button>
+                <button className="btn btn-danger" onClick={() => setDeleteStep(2)}>{lang === 'ar' ? 'حذف' : 'Delete'}</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ padding: '10px 0 20px 0', fontSize: '15px', color: '#ef4444' }}>
+                {lang === 'ar' ? 'تحذير: لا يمكن التراجع عن هذا الإجراء. هل أنت متأكد تماماً بأنك تريد حذفه نهائياً؟' : 'Warning: This action cannot be undone. Are you absolutely certain you want to permanently delete this?'} <br/><br/>
+                <strong>{invoiceToDelete.supplier}</strong>
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => { setInvoiceToDelete(null); setDeleteStep(1); }}>{t('common.cancel') || 'Cancel'}</button>
+                <button className="btn btn-danger" onClick={confirmDelete}>{lang === 'ar' ? 'نعم، احذف نهائياً' : 'Yes, Permanently Delete'}</button>
+              </div>
+            </>
+          )}
         </Modal>
       )}
 
