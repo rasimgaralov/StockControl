@@ -84,20 +84,13 @@ export default function GelenStoklarPage() {
       </div>
 
       {/* Stats */}
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
         <div className="stat-card">
           <div className="stat-card-header">
             <div className="stat-card-icon blue">📥</div>
           </div>
           <div className="stat-card-value">{totalInbounds}</div>
           <div className="stat-card-label">{t('inboundsPage.totalInbounds') || "Total Incoming"}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-card-header">
-            <div className="stat-card-icon green">📦</div>
-          </div>
-          <div className="stat-card-value">{totalQtyInbound}</div>
-          <div className="stat-card-label">{t('inboundsPage.qtyInbound') || "Total Quantity"}</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-header">
