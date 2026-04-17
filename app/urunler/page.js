@@ -33,6 +33,7 @@ export default function UrunlerPage() {
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [quickAddProduct, setQuickAddProduct] = useState(null);
   const [quickAddQty, setQuickAddQty] = useState("");
+  const [quickAddExpiry, setQuickAddExpiry] = useState("");
   const [formData, setFormData] = useState({
     name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: ''
   });
@@ -113,6 +114,7 @@ export default function UrunlerPage() {
   const openQuickAddModal = (product) => {
     setQuickAddProduct(product);
     setQuickAddQty("");
+    setQuickAddExpiry("");
     setShowQuickAddModal(true);
   };
 
@@ -438,6 +440,16 @@ export default function UrunlerPage() {
             <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>
               {quickAddProduct ? (quickAddProduct[`unit_${lang}`] || quickAddProduct.unit_en) : ''}
             </span>
+          </div>
+          <div className="form-group" style={{ marginTop: '15px' }}>
+            <label className="form-label">{t('productsPage.expiryLabel') || "Expiry Date"}</label>
+            <input 
+              className="form-input" 
+              type="date" 
+              min={todayDateStr}
+              value={quickAddExpiry} 
+              onChange={(e) => setQuickAddExpiry(e.target.value)} 
+            />
           </div>
           <div className="modal-footer" style={{ marginTop: '20px' }}>
             <button type="button" className="btn btn-secondary" onClick={() => setShowQuickAddModal(false)}>{t('common.cancel')}</button>
