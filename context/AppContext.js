@@ -430,6 +430,7 @@ export function AppProvider({ children }) {
     addTransfer,
     addWasteLog,
     addInbound,
+    addBatch,
     logActivity,
     refreshData: fetchData,
   };
