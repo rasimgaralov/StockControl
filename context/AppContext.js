@@ -111,6 +111,77 @@ export function AppProvider({ children }) {
   
   const getProductById = useCallback((id) => products.find(p => p.id === id), [products]);
 
+  // ═══════════ Multi-Batch FEFO Utilities ═══════════
+  const recalculateAndApplyProductStock = async (productId) => {
+    const { data: activeBatches } = await supabase
+      .from('stock_batches')
+      .select('*')
+      .eq('productId', productId)
+      .gt('quantity', 0)
+      .order('expiryDate', { ascending: true, nullsFirst: false });
+      
+    let newSum = 0;
+    let newEarliest = null;
+    if (activeBatches && activeBatches.length > 0) {
+      newSum = activeBatches.reduce((acc, b) => acc + Number(b.quantity), 0);
+      newEarliest = activeBatches[0].expiryDate;
+    }
+    
+    await supabase.from('products').update({ quantity: newSum, expiryDate: newEarliest }).eq('id', productId);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, quantity: newSum, expiryDate: newEarliest } : p));
+  };
+
+  const processFEFODeduction = async (productId, amountToRemove) => {
+    const { data: batches } = await supabase
+      .from('stock_batches')
+      .select('*')
+      .eq('productId', productId)
+      .gt('quantity', 0)
+      .order('expiryDate', { ascending: true, nullsFirst: false });
+      
+    let remaining = Number(amountToRemove);
+    const updates = [];
+    for (const b of (batches || [])) {
+      if (remaining <= 0) break;
+      const deduction = Math.min(Number(b.quantity), remaining);
+      b.quantity = Number(b.quantity) - deduction;
+      remaining -= deduction;
+      updates.push(b);
+    }
+    
+    for (const b of updates) {
+      await supabase.from('stock_batches').update({ quantity: b.quantity }).eq('id', b.id);
+    }
+    await recalculateAndApplyProductStock(productId);
+  };
+
+  const addBatch = useCallback(async (batchData) => {
+    if (!currentUser?.id) return;
+    
+    // 1. Insert Inbounds (for tracking history)
+    const newInbound = {
+      id: 'i' + Date.now(),
+      productId: batchData.productId,
+      quantity: batchData.quantity,
+      supplier: batchData.supplier || 'Stock Update',
+      receivedBy: currentUser?.id,
+    };
+    await supabase.from('inbounds').insert([newInbound]);
+    setInbounds(prev => [newInbound, ...prev]);
+
+    // 2. Insert Stock Batch (for FEFO tracking)
+    const newBatch = {
+      id: 'b_' + Date.now(),
+      productId: batchData.productId,
+      quantity: batchData.quantity,
+      expiryDate: batchData.expiryDate || null,
+    };
+    await supabase.from('stock_batches').insert([newBatch]);
+
+    // 3. Recalculate
+    await recalculateAndApplyProductStock(batchData.productId);
+  }, [currentUser]);
+
   // ═══════════ Product Actions ═══════════
   const addProduct = useCallback(async (product) => {
     if (!currentUser?.id) return;
@@ -126,6 +197,15 @@ export function AppProvider({ children }) {
       logActivity('add', 'product', newProduct.id, { name: newProduct.name, quantity: newProduct.quantity });
       
       if (newProduct.quantity && newProduct.quantity > 0) {
+        // Initial Batch Creation
+        const newBatch = {
+          id: 'b_' + Date.now(),
+          productId: newProduct.id,
+          quantity: newProduct.quantity,
+          expiryDate: newProduct.expiryDate || null,
+        };
+        supabase.from('stock_batches').insert([newBatch]);
+
         const newInbound = {
           id: 'i' + Date.now(),
           productId: newProduct.id,
@@ -147,20 +227,6 @@ export function AppProvider({ children }) {
       const oldProduct = products.find(p => p.id === id);
       setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
       logActivity('edit', 'product', id, { name: oldProduct?.name, changes: updates });
-      
-      if (updates.quantity !== undefined && oldProduct && updates.quantity > oldProduct.quantity) {
-        const addedQty = updates.quantity - oldProduct.quantity;
-        const newInbound = {
-          id: 'i' + Date.now(),
-          productId: id,
-          quantity: addedQty,
-          supplier: updates.supplier_en || oldProduct?.supplier_en || 'Stock Update',
-          receivedBy: currentUser?.id || 'unknown',
-        };
-        supabase.from('inbounds').insert([newInbound]).then(({error: inError}) => {
-          if (!inError) setInbounds(prev => [newInbound, ...prev]);
-        });
-      }
     }
   }, [products, logActivity, currentUser]);
 
@@ -190,9 +256,7 @@ export function AppProvider({ children }) {
 
     const product = products.find(p => p.id === transfer.productId);
     if (product) {
-      const newQty = Math.max(0, product.quantity - transfer.quantity);
-      await supabase.from('products').update({ quantity: newQty }).eq('id', transfer.productId);
-      setProducts(prev => prev.map(p => p.id === transfer.productId ? { ...p, quantity: newQty } : p));
+      await processFEFODeduction(transfer.productId, transfer.quantity);
     }
 
     logActivity('transfer', 'transfer', newTransfer.id, {
@@ -256,9 +320,7 @@ export function AppProvider({ children }) {
 
     const product = products.find(p => p.id === wasteLog.productId);
     if (product) {
-      const newQty = Math.max(0, product.quantity - wasteLog.quantity);
-      await supabase.from('products').update({ quantity: newQty }).eq('id', wasteLog.productId);
-      setProducts(prev => prev.map(p => p.id === wasteLog.productId ? { ...p, quantity: newQty } : p));
+      await processFEFODeduction(wasteLog.productId, wasteLog.quantity);
     }
 
     logActivity('waste', 'waste', newWaste.id, {

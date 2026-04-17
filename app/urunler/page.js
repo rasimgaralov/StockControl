@@ -8,7 +8,7 @@ import Modal from '@/components/Modal';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function UrunlerPage() {
-  const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading } = useApp();
+  const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading, addBatch } = useApp();
   const { hasPermission } = useAuth();
   const { t, lang } = useLanguage();
 
@@ -123,8 +123,13 @@ export default function UrunlerPage() {
     const qtyToAdd = Number(String(quickAddQty).replace(',', '.'));
     if (!qtyToAdd || qtyToAdd <= 0) return;
     
-    const newQuantity = quickAddProduct.quantity + qtyToAdd;
-    updateProduct(quickAddProduct.id, { quantity: newQuantity });
+    await addBatch({
+      productId: quickAddProduct.id,
+      quantity: qtyToAdd,
+      expiryDate: quickAddExpiry || null,
+      supplier: quickAddProduct.supplier_en
+    });
+    
     setShowQuickAddModal(false);
   };
 
