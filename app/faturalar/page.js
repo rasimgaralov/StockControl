@@ -19,6 +19,7 @@ export default function FaturalarPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
+  const [viewImage, setViewImage] = useState(null);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,6 +146,24 @@ export default function FaturalarPage() {
     }
   };
 
+  const handleDownload = async (inv) => {
+    try {
+      const resp = await fetch(inv.image_url);
+      const blob = await resp.blob();
+      const objUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      const fileExt = inv.image_url.split('.').pop() || 'jpg';
+      a.download = `invoice_${inv.supplier.replace(/\\s+/g, '_')}_${new Date(inv.uploaded_at).getTime()}.${fileExt}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(objUrl);
+    } catch (err) {
+      alert("İndirme başarısız / Download failed: " + err.message);
+    }
+  };
+
   return (
     <div className="slide-up">
       <div className="page-header">
@@ -206,7 +225,10 @@ export default function FaturalarPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                 {groupedInvoices[dateLabel].map(inv => (
                   <div key={inv.id} className="stat-card" style={{ padding: '16px', position: 'relative' }}>
-                    <div style={{ width: '100%', height: '220px', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-secondary)', marginBottom: '12px' }}>
+                    <div 
+                      onClick={() => setViewImage(inv)}
+                      style={{ width: '100%', height: '220px', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-secondary)', marginBottom: '12px', cursor: 'pointer' }}
+                    >
                       <img src={inv.image_url} alt="Invoice" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -313,6 +335,45 @@ export default function FaturalarPage() {
             <button className="btn btn-danger" onClick={confirmDelete}>{lang==='ar'?'حذف':'Delete'}</button>
           </div>
         </Modal>
+      )}
+
+      {viewImage && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 9999,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            position: 'absolute', top: '20px', right: '20px', 
+            display: 'flex', gap: '10px', zIndex: 10000
+          }}>
+            <button 
+              className="btn btn-primary"
+              style={{ fontSize: '20px', padding: '8px 16px', borderRadius: '8px' }}
+              onClick={() => handleDownload(viewImage)}
+              title={lang === 'ar' ? 'تحميل' : 'Download'}
+            >
+              ⬇️
+            </button>
+            <button 
+              className="btn btn-danger"
+              style={{ fontSize: '20px', padding: '8px 16px', borderRadius: '8px' }}
+              onClick={() => setViewImage(null)}
+              title={t('common.cancel') || 'Close'}
+            >
+              ✕
+            </button>
+          </div>
+          <img 
+            src={viewImage.image_url} 
+            alt="Invoice preview" 
+            style={{ maxWidth: '95%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '8px' }} 
+          />
+          <div style={{ color: 'white', marginTop: '16px', fontSize: '18px', fontWeight: '600' }}>
+            {viewImage.supplier}
+          </div>
+        </div>
       )}
 
     </div>
