@@ -10,10 +10,11 @@ import Modal from '@/components/Modal';
 export default function FaturalarPage() {
   const { currentUser, hasPermission } = useAuth();
   const { t, lang } = useLanguage();
-  const { invoicesList, addInvoice, deleteInvoice, logActivity } = useApp();
+  const { invoicesList, addInvoice, updateInvoice, deleteInvoice, logActivity } = useApp();
 
   // Role Based UI Flags
   const canAdd = hasPermission('add');
+  const canEdit = hasPermission('edit');
   const canDelete = hasPermission('delete'); 
 
   const [showAddModal, setShowAddModal] = useState(false);
