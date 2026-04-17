@@ -349,9 +349,10 @@ export default function TransferlerPage() {
                 }}
                 onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
               />
-              {formData.productId && !showDropdown && productSearch && (
-                <div style={{ position: 'absolute', right: '14px', top: '10px', color: 'var(--color-success)', fontSize: '14px', pointerEvents: 'none' }}>
-                  ✓
+              {formData.productId && !showDropdown && selectedProduct && (
+                <div style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: '13px', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{selectedProduct.quantity} {(selectedProduct[`unit_${lang}`] || selectedProduct.unit_en)}</span>
+                  <span style={{ color: 'var(--color-success)' }}>✓</span>
                 </div>
               )}
 
