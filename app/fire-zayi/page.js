@@ -44,7 +44,7 @@ export default function FireZayiPage() {
     addWasteLog({
       productId: formData.productId,
       deptId: formData.deptId,
-      quantity: Number(formData.quantity),
+      quantity: Number(String(formData.quantity).replace(',', '.')),
       reason_en: formData.reason_en,
       reason_ar: formData.reason_ar,
     });

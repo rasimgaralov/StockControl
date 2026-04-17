@@ -82,7 +82,7 @@ export default function TransferlerPage() {
     }
 
     const selectedProduct = products.find(p => p.id === formData.productId);
-    const transferQty = Number(formData.quantity);
+    const transferQty = Number(String(formData.quantity).replace(',', '.'));
 
     if (selectedProduct && transferQty > selectedProduct.quantity) {
       setErrorMsg(`${t('transfersPage.errInsufficient')} ${selectedProduct.quantity}`);

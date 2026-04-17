@@ -115,8 +115,8 @@ export default function UrunlerPage() {
     }
     const data = {
       ...formData,
-      quantity: Number(formData.quantity),
-      criticalThreshold: Number(formData.criticalThreshold),
+      quantity: Number(String(formData.quantity).replace(',', '.')),
+      criticalThreshold: Number(String(formData.criticalThreshold).replace(',', '.')),
       expiryDate: formData.expiryDate || null,
     };
     if (editProduct) {
