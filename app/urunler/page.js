@@ -363,7 +363,15 @@ export default function UrunlerPage() {
             </div>
             <div className="form-group">
               <label className="form-label">{t('productsPage.thresholdLabel')}</label>
-              <input className="form-input" type="number" required min="0" value={formData.criticalThreshold} onChange={(e) => setFormData({ ...formData, criticalThreshold: e.target.value })} />
+              <input 
+                className="form-input" 
+                type="number" 
+                required 
+                min={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
+                step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"} 
+                value={formData.criticalThreshold} 
+                onChange={(e) => setFormData({ ...formData, criticalThreshold: e.target.value })} 
+              />
             </div>
           </div>
           <div className="form-group">
