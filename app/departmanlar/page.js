@@ -14,7 +14,7 @@ export default function DepartmanlarPage() {
     return departments.map(dept => {
       const deptProducts = products.filter(p => p.deptId === dept.id);
       const inStockCount = deptProducts.filter(p => p.quantity > 0).length;
-      const criticalCount = deptProducts.filter(p => p.quantity <= p.criticalThreshold).length;
+      const criticalCount = deptProducts.length - inStockCount;
       return {
         ...dept,
         inStockCount,
