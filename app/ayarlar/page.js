@@ -9,7 +9,7 @@ import Modal from '@/components/Modal';
 export default function AyarlarPage() {
   const { theme, changeTheme, users, addUser, updateUser, updateUserPassword, deleteUser } = useApp();
   const { currentUser, hasPermission } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', username: '', email: '', password: '' });
@@ -173,7 +173,7 @@ export default function AyarlarPage() {
                 <span className="badge badge-purple">{users.length} {t('settingsPage.usersCount')}</span>
               </div>
               <button className="btn btn-primary btn-sm" onClick={() => setIsAddingUser(true)}>
-                ➕ {lang === 'ar' ? 'إضافة مستخدم' : 'Yeni Kullanıcı'}
+                ➕ {language === 'ar' ? 'إضافة مستخدم' : 'Yeni Kullanıcı'}
               </button>
             </div>
             
@@ -274,7 +274,7 @@ export default function AyarlarPage() {
         <Modal
           isOpen={true}
           onClose={() => setIsAddingUser(false)}
-          title={lang === 'ar' ? 'إضافة مستخدم جديد' : 'Yeni Kullanıcı Ekle'}
+          title={language === 'ar' ? 'إضافة مستخدم جديد' : 'Yeni Kullanıcı Ekle'}
         >
           <form onSubmit={handleAddSubmit}>
             <div className="form-group">
