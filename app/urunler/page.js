@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { getStockStatus, formatDate } from '@/data/mockData';
@@ -9,8 +9,11 @@ import { useLanguage } from '@/context/LanguageContext';
 
 export default function UrunlerPage() {
   const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading, addBatch } = useApp();
-  const { hasPermission } = useAuth();
+  const { currentUser, hasPermission } = useAuth();
   const { t, lang } = useLanguage();
+
+  const isEditor = currentUser?.role === 'editor';
+  const warehouseDept = useMemo(() => departments.find(d => d.name_en === 'Warehouse' || d.name_en === 'Depo') || departments[0], [departments]);
 
   const canAdd = hasPermission('add');
   const canEdit = hasPermission('edit');
@@ -21,6 +24,12 @@ export default function UrunlerPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
+
+  useEffect(() => {
+    if (isEditor && warehouseDept) {
+      setFilterDept(warehouseDept.id);
+    }
+  }, [isEditor, warehouseDept]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,7 +44,7 @@ export default function UrunlerPage() {
   const [quickAddQty, setQuickAddQty] = useState("");
   const [quickAddExpiry, setQuickAddExpiry] = useState("");
   const [formData, setFormData] = useState({
-    name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: ''
+    name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: '', otherDeptId: ''
   });
 
   // Today's date for 'min' attribute in YYYY-MM-DD format based on local timezone
@@ -77,7 +86,7 @@ export default function UrunlerPage() {
   }, [products, search, filterDept, filterStatus, sortBy, sortDir]);
 
   // Reset page when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [search, filterDept, filterStatus, sortBy, sortDir]);
 
@@ -91,7 +100,7 @@ export default function UrunlerPage() {
   };
 
   const openAddModal = () => {
-    setFormData({ name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: departments[0]?.id || '' });
+    setFormData({ name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: isEditor ? warehouseDept?.id : (departments[0]?.id || ''), otherDeptId: '' });
     setEditProduct(null);
     setShowAddModal(true);
   };
@@ -107,6 +116,7 @@ export default function UrunlerPage() {
       expiryDate: product.expiryDate || '',
       criticalThreshold: product.criticalThreshold,
       deptId: product.deptId,
+      otherDeptId: '',
     });
     setEditProduct(product);
     setShowAddModal(true);
@@ -147,10 +157,14 @@ export default function UrunlerPage() {
       criticalThreshold: Number(String(formData.criticalThreshold).replace(',', '.')),
       expiryDate: formData.expiryDate || null,
     };
+    const { otherDeptId, ...primaryData } = data;
     if (editProduct) {
-      updateProduct(editProduct.id, data).catch(err => alert("DB Edit Error: " + err));
+      updateProduct(editProduct.id, primaryData).catch(err => alert("DB Edit Error: " + err));
     } else {
-      addProduct(data).catch(err => alert("DB Add Error: " + err));
+      addProduct(primaryData).catch(err => alert("DB Add Error: " + err));
+      if (otherDeptId) {
+        addProduct({ ...primaryData, deptId: otherDeptId, quantity: 0 }).catch(err => alert("DB Add Error: " + err));
+      }
     }
     setShowAddModal(false);
   };
@@ -205,8 +219,8 @@ export default function UrunlerPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="filter-select" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-          <option value="all">{t('productsPage.allDepartments')}</option>
+        <select className="filter-select" value={filterDept} disabled={isEditor} onChange={(e) => setFilterDept(e.target.value)}>
+          {!isEditor && <option value="all">{t('productsPage.allDepartments')}</option>}
           {departments.map(d => (
             <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
           ))}
@@ -266,7 +280,7 @@ export default function UrunlerPage() {
                   <tr key={p.id}>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {canEdit && (
+                        {canAdd && (
                           <button className="btn btn-primary btn-sm" style={{ padding: '2px 8px', fontSize: '16px', fontWeight: 'bold', color: '#ffffff', borderRadius: '4px', lineHeight: '1' }} onClick={() => openQuickAddModal(p)} title={lang === 'ar' ? 'إضافة' : 'Add'}>+</button>
                         )}
                         <span>{p.name}</span>
@@ -395,12 +409,23 @@ export default function UrunlerPage() {
           </div>
           <div className="form-group">
             <label className="form-label">{t('productsPage.deptLabel')}</label>
-            <select className="form-select" value={formData.deptId} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })}>
+            <select className="form-select" value={formData.deptId} disabled={isEditor} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })}>
               {departments.map(d => (
                 <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
               ))}
             </select>
           </div>
+          {!editProduct && (
+            <div className="form-group">
+              <label className="form-label">{lang === 'ar' ? 'قسم إضافي (تلقائيًا بـ 0)' : 'Additional Dept (Added with 0Qty)'}</label>
+              <select className="form-select" value={formData.otherDeptId} onChange={(e) => setFormData({ ...formData, otherDeptId: e.target.value })}>
+                <option value="">{lang === 'ar' ? '-- لا توجد إضافة أخرى --' : '-- No Additional Dept --'}</option>
+                {departments.filter(d => d.id !== formData.deptId).map(d => (
+                  <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>{t('common.cancel')}</button>
             <button type="submit" className="btn btn-primary">{editProduct ? t('productsPage.updateBtn') : t('common.add')}</button>

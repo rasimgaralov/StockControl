@@ -192,7 +192,7 @@ export function AppProvider({ children }) {
     const userId = currentUser.id;
     const newProduct = {
       ...product,
-      id: 'p' + Date.now(),
+      id: 'p' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       createdBy: userId,
     };
     const { error } = await supabase.from('products').insert([newProduct]);
@@ -337,6 +337,25 @@ export function AppProvider({ children }) {
   }, [products, currentUser, logActivity]);
 
   // ═══════════ User Management (Admin only) ═══════════
+  const addUser = useCallback(async (userData) => {
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Failed to add user');
+      
+      setUsers(prev => [...prev, result.user]);
+      logActivity('add', 'user', result.user.id, { name: result.user.name, role: result.user.role });
+      return { success: true, user: result.user };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
+    }
+  }, [logActivity]);
+
   const updateUser = useCallback(async (id, updates) => {
     const { error } = await supabase.from('users').update(updates).eq('id', id);
     if (!error) {
@@ -450,6 +469,7 @@ export function AppProvider({ children }) {
     addProduct,
     updateProduct,
     deleteProduct,
+    addUser,
     updateUser,
     updateUserPassword,
     deleteUser,

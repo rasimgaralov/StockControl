@@ -19,7 +19,7 @@ export default function Sidebar() {
     { label: t('sidebar.departments'), icon: '🏢', href: '/departmanlar' },
     { label: t('sidebar.transfers'), icon: '🔄', href: '/transferler' },
     { label: t('sidebar.waste'), icon: '🗑️', href: '/fire-zayi' },
-    { label: t('sidebar.invoices'), icon: '🧾', href: '/faturalar' },
+    ...(['admin', 'manager', 'editor'].includes(currentUser?.role) ? [{ label: t('sidebar.invoices'), icon: '🧾', href: '/faturalar' }] : []),
     { label: t('sidebar.alerts'), icon: '🔔', href: '/alarmlar' },
   ];
 
@@ -96,14 +96,16 @@ export default function Sidebar() {
           <span className="nav-icon">⚙️</span>
           <span>{t('sidebar.settings')}</span>
         </Link>
-        <Link 
-          href="/islem-gecmisi" 
-          className={`nav-link ${pathname.startsWith('/islem-gecmisi') ? 'active' : ''}`}
-          onClick={closeSidebarOnMobile}
-        >
-          <span className="nav-icon">📝</span>
-          <span>{t('sidebar.activityHistory')}</span>
-        </Link>
+        {currentUser?.role === 'admin' && (
+          <Link 
+            href="/islem-gecmisi" 
+            className={`nav-link ${pathname.startsWith('/islem-gecmisi') ? 'active' : ''}`}
+            onClick={closeSidebarOnMobile}
+          >
+            <span className="nav-icon">📝</span>
+            <span>{t('sidebar.activityHistory')}</span>
+          </Link>
+        )}
 
         {/* Global Language Switcher in Sidebar */}
         <div style={{ marginTop: 'auto', marginBottom: '10px' }}>

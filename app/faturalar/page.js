@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useApp } from '@/context/AppContext';
@@ -9,13 +10,22 @@ import Modal from '@/components/Modal';
 
 export default function FaturalarPage() {
   const { currentUser, hasPermission } = useAuth();
+  const router = useRouter();
   const { t, lang } = useLanguage();
   const { invoicesList, addInvoice, updateInvoice, deleteInvoice, logActivity } = useApp();
 
+  useEffect(() => {
+    if (currentUser && !['admin', 'manager', 'editor'].includes(currentUser.role)) {
+      router.push('/');
+    }
+  }, [currentUser, router]);
+
+  if (!['admin', 'manager', 'editor'].includes(currentUser?.role)) return null;
+
   // Role Based UI Flags
   const canAdd = hasPermission('add');
-  const canEdit = hasPermission('edit');
-  const canDelete = hasPermission('delete'); 
+  const canEdit = currentUser?.role === 'admin';
+  const canDelete = currentUser?.role === 'admin'; 
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [invoiceToEdit, setInvoiceToEdit] = useState(null);

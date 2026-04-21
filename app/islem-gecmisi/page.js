@@ -3,7 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useRouter } from 'next/navigation';
 
 const ACTION_ICONS = {
   add: '➕',
@@ -38,6 +40,8 @@ function formatDateTime(dateStr) {
 
 export default function IslemGecmisiPage() {
   const { getUserName } = useApp();
+  const { currentUser } = useAuth();
+  const router = useRouter();
   const { t } = useLanguage();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +66,14 @@ export default function IslemGecmisiPage() {
     }
     loadLogs();
   }, []);
+
+  useEffect(() => {
+    if (currentUser && currentUser.role !== 'admin') {
+      router.push('/');
+    }
+  }, [currentUser, router]);
+
+  if (currentUser?.role !== 'admin') return null;
 
   const filteredLogs = useMemo(() => {
     let result = [...logs];

@@ -8,7 +8,7 @@ const AuthContext = createContext(null);
 const ROLE_PERMISSIONS = {
   admin:   { view: true, add: true, edit: true, delete: true, manageUsers: true },
   manager: { view: true, add: true, edit: true, delete: true, manageUsers: false },
-  editor:  { view: true, add: true, edit: true, delete: false, manageUsers: false },
+  editor:  { view: true, add: true, edit: false, delete: false, manageUsers: false },
   user:    { view: true, add: false, edit: false, delete: false, manageUsers: false },
 };
 

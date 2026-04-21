@@ -7,12 +7,14 @@ import { useLanguage } from '@/context/LanguageContext';
 import Modal from '@/components/Modal';
 
 export default function AyarlarPage() {
-  const { theme, changeTheme, users, updateUser, updateUserPassword, deleteUser } = useApp();
+  const { theme, changeTheme, users, addUser, updateUser, updateUserPassword, deleteUser } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { t } = useLanguage();
 
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', username: '', email: '', password: '' });
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [addForm, setAddForm] = useState({ name: '', username: '', email: '', password: '', role: 'user' });
   const [userToDelete, setUserToDelete] = useState(null);
 
   const themes = [
@@ -72,6 +74,17 @@ export default function AyarlarPage() {
       }
       
       if (success) setEditingUser(null);
+    }
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    const res = await addUser(addForm);
+    if (res.success) {
+      setIsAddingUser(false);
+      setAddForm({ name: '', username: '', email: '', password: '', role: 'user' });
+    } else {
+      alert(res.error);
     }
   };
 
@@ -150,14 +163,21 @@ export default function AyarlarPage() {
         </div>
       </div>
 
-      {/* Users Section */}
-      <div className="content-card" style={{ marginTop: '24px' }}>
-        <div className="content-card-header">
-          <h3>👥 {t('settingsPage.usersTitle')}</h3>
-          <span className="badge badge-purple">{users.length} {t('settingsPage.usersCount')}</span>
-        </div>
-        
-        <div className="data-table-wrapper">
+      {isAdmin && (
+        <>
+          {/* Users Section */}
+          <div className="content-card" style={{ marginTop: '24px' }}>
+            <div className="content-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ display: 'inline-block', marginRight: '10px' }}>👥 {t('settingsPage.usersTitle')}</h3>
+                <span className="badge badge-purple">{users.length} {t('settingsPage.usersCount')}</span>
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={() => setIsAddingUser(true)}>
+                ➕ {lang === 'ar' ? 'إضافة مستخدم' : 'Yeni Kullanıcı'}
+              </button>
+            </div>
+            
+            <div className="data-table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -249,6 +269,47 @@ export default function AyarlarPage() {
         </div>
       </div>
 
+      {/* Add User Modal */}
+      {isAddingUser && (
+        <Modal
+          isOpen={true}
+          onClose={() => setIsAddingUser(false)}
+          title={lang === 'ar' ? 'إضافة مستخدم جديد' : 'Yeni Kullanıcı Ekle'}
+        >
+          <form onSubmit={handleAddSubmit}>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colName')}</label>
+              <input className="form-input" required value={addForm.name} onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colUsername')}</label>
+              <input className="form-input" required value={addForm.username} onChange={(e) => setAddForm({ ...addForm, username: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colEmail')}</label>
+              <input className="form-input" type="email" required value={addForm.email} onChange={(e) => setAddForm({ ...addForm, email: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colPassword') || 'Password'}</label>
+              <input className="form-input" type="password" required value={addForm.password} onChange={(e) => setAddForm({ ...addForm, password: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('settingsPage.colRole') || 'Role'}</label>
+              <select className="form-select" value={addForm.role} onChange={(e) => setAddForm({ ...addForm, role: e.target.value })}>
+                <option value="user">User</option>
+                <option value="editor">Editor</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setIsAddingUser(false)}>{t('common.cancel')}</button>
+              <button type="submit" className="btn btn-primary">{t('common.add') || 'Ekle'}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
       {/* Edit User Modal */}
       {editingUser && (
         <Modal
@@ -295,7 +356,9 @@ export default function AyarlarPage() {
             <button type="button" className="btn btn-secondary" onClick={() => setUserToDelete(null)}>{t('common.cancel')}</button>
             <button type="button" className="btn btn-danger" onClick={handleDeleteUser}>{t('common.delete')}</button>
           </div>
-        </Modal>
+          </Modal>
+        )}
+      </>
       )}
     </div>
   );

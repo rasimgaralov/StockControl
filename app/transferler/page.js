@@ -9,7 +9,7 @@ import Modal from '@/components/Modal';
 
 export default function TransferlerPage() {
   const { products, departments, transfersList, addTransfer, getProductName, getDeptName, getDeptIcon, getUserName, loading, todayTransfers } = useApp();
-  const { hasPermission } = useAuth();
+  const { currentUser, hasPermission } = useAuth();
   const { t, lang } = useLanguage();
 
   const canAdd = hasPermission('add');
@@ -331,10 +331,10 @@ export default function TransferlerPage() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">{t('transfersPage.sourceLabel')}</label>
-              <select className="form-select" value={formData.fromDeptId} disabled style={{ backgroundColor: 'var(--bg-surface-hover)', cursor: 'not-allowed' }}>
-                {warehouseDept && (
-                  <option value={warehouseDept.id}>{warehouseDept.icon} {(warehouseDept[`name_${lang}`] || warehouseDept.name_en)}</option>
-                )}
+              <select className="form-select" value={formData.fromDeptId} disabled={currentUser?.role === 'editor'} onChange={(e) => setFormData({ ...formData, fromDeptId: e.target.value })} style={currentUser?.role === 'editor' ? { backgroundColor: 'var(--bg-surface-hover)', cursor: 'not-allowed' } : {}}>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
+                ))}
               </select>
             </div>
             <div className="form-group">
