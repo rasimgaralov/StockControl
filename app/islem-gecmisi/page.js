@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -40,7 +40,7 @@ function formatDateTime(dateStr) {
 
 export default function IslemGecmisiPage() {
   const { getUserName } = useApp();
-  const { currentUser } = useAuth();
+  const { currentUser, supabase } = useAuth();
   const router = useRouter();
   const { t } = useLanguage();
   const [logs, setLogs] = useState([]);

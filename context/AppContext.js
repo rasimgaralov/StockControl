@@ -1,13 +1,13 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const { currentUser } = useAuth();
+  const { currentUser, supabase } = useAuth();
   const [products, setProducts] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
@@ -21,35 +21,40 @@ export function AppProvider({ children }) {
 
   const fetchData = async () => {
     setLoading(true);
-    const [
-      { data: dData },
-      { data: uData },
-      { data: pData },
-      { data: dsData },
-      { data: tData },
-      { data: wData },
-      { data: iData },
-      { data: invData }
-    ] = await Promise.all([
-      supabase.from('departments').select('*'),
-      supabase.from('users').select('id, name, username, email, role, deptId'),
-      supabase.from('products').select('*'),
-      supabase.from('deptStock').select('*'),
-      supabase.from('transfers').select('*'),
-      supabase.from('wasteLogs').select('*'),
-      supabase.from('inbounds').select('*'),
-      supabase.from('invoices').select('*').order('uploaded_at', { ascending: false })
-    ]);
+    try {
+      const [
+        { data: dData },
+        { data: uData },
+        { data: pData },
+        { data: dsData },
+        { data: tData },
+        { data: wData },
+        { data: iData },
+        { data: invData }
+      ] = await Promise.all([
+        supabase.from('departments').select('*'),
+        supabase.from('users').select('id, name, username, email, role, deptId'),
+        supabase.from('products').select('*'),
+        supabase.from('deptStock').select('*'),
+        supabase.from('transfers').select('*'),
+        supabase.from('wasteLogs').select('*'),
+        supabase.from('inbounds').select('*'),
+        supabase.from('invoices').select('*').order('uploaded_at', { ascending: false })
+      ]);
 
-    setDepartments(dData || []);
-    setUsers(uData || []);
-    setProducts(pData || []);
-    setDeptStock(dsData || []);
-    setTransfers(tData || []);
-    setWasteLogs(wData || []);
-    setInbounds(iData || []);
-    setInvoices(invData || []);
-    setLoading(false);
+      setDepartments(dData || []);
+      setUsers(uData || []);
+      setProducts(pData || []);
+      setDeptStock(dsData || []);
+      setTransfers(tData || []);
+      setWasteLogs(wData || []);
+      setInbounds(iData || []);
+      setInvoices(invData || []);
+    } catch (error) {
+      console.error("Error fetching app data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -261,6 +266,34 @@ export function AppProvider({ children }) {
     const product = products.find(p => p.id === transfer.productId);
     if (product) {
       await processFEFODeduction(transfer.productId, transfer.quantity);
+
+      // Calculate Department Stock based ONLY on the last 3 transfers (including this one)
+      const { data: previousTransfers } = await supabase
+        .from('transfers')
+        .select('quantity')
+        .eq('productId', transfer.productId)
+        .eq('toDeptId', transfer.toDeptId)
+        .order('transferredAt', { ascending: false })
+        .limit(2); // Get the 2 most recent before this one
+
+      const newDeptQuantity = (previousTransfers || []).reduce((sum, t) => sum + Number(t.quantity), 0) + Number(transfer.quantity);
+      
+      const { error: upsertError } = await supabase.from('deptStock').upsert({
+        productId: transfer.productId,
+        deptId: transfer.toDeptId,
+        quantity: newDeptQuantity
+      });
+      if (upsertError) {
+        console.error("Error updating deptStock:", upsertError);
+      } else {
+        setDeptStock(prev => {
+          const existing = prev.find(ds => ds.productId === transfer.productId && ds.deptId === transfer.toDeptId);
+          if (existing) {
+            return prev.map(ds => ds.productId === transfer.productId && ds.deptId === transfer.toDeptId ? { ...ds, quantity: newDeptQuantity } : ds);
+          }
+          return [...prev, { productId: transfer.productId, deptId: transfer.toDeptId, quantity: newDeptQuantity }];
+        });
+      }
     }
 
     logActivity('transfer', 'transfer', newTransfer.id, {
@@ -339,7 +372,7 @@ export function AppProvider({ children }) {
   // ═══════════ User Management (Admin only) ═══════════
   const addUser = useCallback(async (userData) => {
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch('/api/admin/users/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
@@ -347,9 +380,18 @@ export function AppProvider({ children }) {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Failed to add user');
       
-      setUsers(prev => [...prev, result.user]);
-      logActivity('add', 'user', result.user.id, { name: result.user.name, role: result.user.role });
-      return { success: true, user: result.user };
+      const formattedUser = {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.user_metadata?.name || '',
+        username: result.user.user_metadata?.username || '',
+        role: result.user.user_metadata?.role || 'user',
+        deptId: result.user.user_metadata?.deptId || null
+      };
+
+      setUsers(prev => [...prev, formattedUser]);
+      logActivity('add', 'user', formattedUser.id, { name: formattedUser.name, role: formattedUser.role });
+      return { success: true, user: formattedUser };
     } catch (err) {
       console.error(err);
       return { success: false, error: err.message };
@@ -357,6 +399,20 @@ export function AppProvider({ children }) {
   }, [logActivity]);
 
   const updateUser = useCallback(async (id, updates) => {
+    // If email is changed, update auth.users via Admin API
+    if (updates.email) {
+      try {
+        const res = await fetch(`/api/users/${id}/password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: updates.email })
+        });
+        if (!res.ok) console.error('Failed to sync auth email');
+      } catch (err) {
+        console.error('Auth email sync error:', err);
+      }
+    }
+
     const { error } = await supabase.from('users').update(updates).eq('id', id);
     if (!error) {
       const oldUser = users.find(u => u.id === id);

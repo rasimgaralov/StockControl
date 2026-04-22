@@ -22,11 +22,23 @@ export default function Dashboard() {
   const lowCount = activeAlerts.filter(a => a.alertType === 'low_stock').length;
   const expiryCount = activeAlerts.filter(a => a.alertType === 'expiry_warning').length;
 
-  const totalProducts = products.length || 1;
-  const deptStockSummary = departments.map(dept => {
-    const deptProducts = products.filter(p => p.deptId === dept.id);
-    return { ...dept, productCount: deptProducts.length };
-  });
+  const warehouseDept = departments.find(d => d.name_en === 'Warehouse' || d.id === 'd5');
+  
+  const deptStockSummary = warehouseDept ? [
+    { 
+      ...warehouseDept, 
+      totalCount: products.length,
+      inStockCount: products.filter(p => p.quantity > 0).length
+    },
+    ...departments.filter(d => d.id !== warehouseDept.id).map(dept => {
+      const deptProducts = products.filter(p => p.category === dept.name_en);
+      return { 
+        ...dept, 
+        totalCount: deptProducts.length,
+        inStockCount: deptProducts.filter(p => p.quantity > 0).length
+      };
+    })
+  ] : [];
 
   const activities = [
     ...transfersList.slice(0, 5).map(t_activity => {
@@ -117,9 +129,20 @@ export default function Dashboard() {
           </div>
           <div className="modern-distribution-list" style={{ display: 'flex', flexDirection: 'column', gap: '22px', padding: '12px 4px 4px' }}>
             {deptStockSummary.map(dept => {
-              const percentage = Math.round((dept.productCount / totalProducts) * 100);
+              const percentage = dept.totalCount === 0 ? 0 : Math.round((dept.inStockCount / dept.totalCount) * 100);
+              const isWarehouse = dept.id === 'd5' || dept.name_en === 'Warehouse';
               return (
-                <div key={dept.id} className="dist-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', group: 'hover' }}>
+                <div key={dept.id} className="dist-row" style={{ 
+                  display: 'flex', alignItems: 'center', gap: '16px', group: 'hover',
+                  ...(isWarehouse ? {
+                    padding: '16px',
+                    background: 'var(--bg-surface)',
+                    border: `2px dashed ${dept.color}`,
+                    borderRadius: '16px',
+                    marginBottom: '12px',
+                    boxShadow: 'var(--shadow-sm)'
+                  } : {})
+                }}>
                   <div style={{
                     width: '46px', height: '46px', borderRadius: '14px',
                     background: `linear-gradient(135deg, var(--bg-surface-hover), var(--bg-primary))`, 
@@ -136,7 +159,7 @@ export default function Dashboard() {
                       <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', letterSpacing: '0.2px' }}>{dept[`name_${lang}`] || dept.name_en}</span>
                       <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                         <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>%{percentage}</span>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '500' }}>({dept.productCount} {t('dashboard.product')})</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '500' }}>({dept.inStockCount} / {dept.totalCount} {t('dashboard.product')})</span>
                       </div>
                     </div>
                     

@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useApp } from '@/context/AppContext';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import Modal from '@/components/Modal';
 
 export default function FaturalarPage() {
-  const { currentUser, hasPermission } = useAuth();
+  const { currentUser, hasPermission, supabase } = useAuth();
   const router = useRouter();
   const { t, lang } = useLanguage();
   const { invoicesList, addInvoice, updateInvoice, deleteInvoice, logActivity } = useApp();

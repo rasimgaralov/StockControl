@@ -18,30 +18,8 @@ function AlarmlarContent() {
   const [sortBy, setSortBy] = useState('date');
   const [sortDir, setSortDir] = useState('desc');
   
-  // Stock Editing Modal
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [newQuantity, setNewQuantity] = useState('');
-
-  const handleEditStock = (productId) => {
-    const p = getProductById(productId);
-    if (!p) return;
-    setEditingProduct(p);
-    setNewQuantity(p.quantity);
-    setShowEditModal(true);
-  };
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
-
-  const saveStock = async (e) => {
-    e.preventDefault();
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, { quantity: Number(newQuantity) });
-      setShowEditModal(false);
-    }
-  };
-
   const criticalCount = activeAlerts.filter(a => a.alertType === 'critical_stock').length;
   const expiryCount = activeAlerts.filter(a => a.alertType === 'expiry_warning').length;
 
@@ -207,12 +185,6 @@ function AlarmlarContent() {
                   </div>
                   <div className="alert-action-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div className="alert-item-time">{formatDateTime(alert.triggeredAt)}</div>
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => handleEditStock(alert.productId)}
-                    >
-                      ✏️ {t('alarmsPage.editBtn')}
-                    </button>
                   </div>
                 </div>
               );
@@ -241,33 +213,6 @@ function AlarmlarContent() {
           </div>
         )}
       </div>
-
-      {/* Edit Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title={t('alarmsPage.editModalTitle')}>
-        {editingProduct && (
-          <form onSubmit={saveStock}>
-            <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-              {t('alarmsPage.editModalDesc1')} <strong>{editingProduct.name}</strong>.
-              {t('alarmsPage.editModalDesc2')} <strong>{editingProduct.criticalThreshold} {(editingProduct[`unit_${lang}`] || editingProduct.unit_en)}</strong>
-            </p>
-            <div className="form-group">
-              <label className="form-label">{t('alarmsPage.newQuantity')} ({(editingProduct[`unit_${lang}`] || editingProduct.unit_en)})</label>
-              <input
-                className="form-input"
-                type="number"
-                required
-                min="0"
-                value={newQuantity}
-                onChange={(e) => setNewQuantity(e.target.value)}
-              />
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>{t('common.cancel')}</button>
-              <button type="submit" className="btn btn-primary">{t('alarmsPage.saveBtn')}</button>
-            </div>
-          </form>
-        )}
-      </Modal>
     </div>
   );
 }

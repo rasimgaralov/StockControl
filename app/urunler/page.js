@@ -8,7 +8,7 @@ import Modal from '@/components/Modal';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function UrunlerPage() {
-  const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading, addBatch } = useApp();
+const { products, departments, addProduct, updateProduct, deleteProduct, getDeptName, loading, addBatch, deptStockList, getProductName, transfersList } = useApp();
   const { currentUser, hasPermission } = useAuth();
   const { t, lang } = useLanguage();
 
@@ -16,7 +16,7 @@ export default function UrunlerPage() {
   const warehouseDept = useMemo(() => departments.find(d => d.name_en === 'Warehouse' || d.name_en === 'Depo') || departments[0], [departments]);
 
   const canAdd = hasPermission('add');
-  const canEdit = hasPermission('edit');
+  const canEdit = hasPermission('edit') || currentUser?.role === 'editor';
   const canDelete = hasPermission('delete');
 
   const [search, setSearch] = useState('');
@@ -24,12 +24,12 @@ export default function UrunlerPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
+  const [activeTab, setActiveTab] = useState('warehouse'); // 'warehouse' or 'departments'
 
   useEffect(() => {
-    if (isEditor && warehouseDept) {
-      setFilterDept(warehouseDept.id);
-    }
-  }, [isEditor, warehouseDept]);
+    // Editors can view all warehouse products
+    setFilterDept('all');
+  }, []);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,7 +44,7 @@ export default function UrunlerPage() {
   const [quickAddQty, setQuickAddQty] = useState("");
   const [quickAddExpiry, setQuickAddExpiry] = useState("");
   const [formData, setFormData] = useState({
-    name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: '', otherDeptId: ''
+    name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: 'd5', category: ''
   });
 
   // Today's date for 'min' attribute in YYYY-MM-DD format based on local timezone
@@ -62,7 +62,8 @@ export default function UrunlerPage() {
     }
 
     if (filterDept !== 'all') {
-      result = result.filter(p => p.deptId === filterDept);
+      const deptNameEn = departments.find(d => d.id === filterDept)?.name_en;
+      result = result.filter(p => p.category === deptNameEn);
     }
 
     if (filterStatus === 'critical') {
@@ -83,7 +84,22 @@ export default function UrunlerPage() {
     });
 
     return result;
-  }, [products, search, filterDept, filterStatus, sortBy, sortDir]);
+  }, [products, search, filterDept, filterStatus, sortBy, sortDir, departments]);
+
+  const filteredDeptStock = useMemo(() => {
+    let result = [...deptStockList];
+    if (filterDept !== 'all') {
+      result = result.filter(ds => ds.deptId === filterDept);
+    }
+    
+    result.sort((a, b) => {
+      const latestA = transfersList.find(t => t.productId === a.productId && t.toDeptId === a.deptId)?.transferredAt || 0;
+      const latestB = transfersList.find(t => t.productId === b.productId && t.toDeptId === b.deptId)?.transferredAt || 0;
+      return new Date(latestB) - new Date(latestA);
+    });
+
+    return result;
+  }, [deptStockList, filterDept, transfersList]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -100,23 +116,23 @@ export default function UrunlerPage() {
   };
 
   const openAddModal = () => {
-    setFormData({ name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: isEditor ? warehouseDept?.id : (departments[0]?.id || ''), otherDeptId: '' });
+    setFormData({ name: '', quantity: '', unit_en: 'kg', unit_ar: 'كجم', supplier_en: '', supplier_ar: '', expiryDate: '', criticalThreshold: '', deptId: 'd5', category: departments[0]?.name_en || '' });
     setEditProduct(null);
     setShowAddModal(true);
   };
 
   const openEditModal = (product) => {
     setFormData({
-      name: product.name,
-      quantity: product.quantity,
-      unit_en: product.unit_en,
-      unit_ar: product.unit_ar,
-      supplier_en: product.supplier_en,
-      supplier_ar: product.supplier_ar,
+      name: product.name || '',
+      quantity: product.quantity || '',
+      unit_en: product.unit_en || 'kg',
+      unit_ar: product.unit_ar || 'كجم',
+      supplier_en: product.supplier_en || '',
+      supplier_ar: product.supplier_ar || '',
       expiryDate: product.expiryDate || '',
-      criticalThreshold: product.criticalThreshold,
-      deptId: product.deptId,
-      otherDeptId: '',
+      criticalThreshold: product.criticalThreshold || '',
+      deptId: 'd5',
+      category: product.category || departments[0]?.name_en || '',
     });
     setEditProduct(product);
     setShowAddModal(true);
@@ -157,14 +173,11 @@ export default function UrunlerPage() {
       criticalThreshold: Number(String(formData.criticalThreshold).replace(',', '.')),
       expiryDate: formData.expiryDate || null,
     };
-    const { otherDeptId, ...primaryData } = data;
+    const { ...primaryData } = data;
     if (editProduct) {
       updateProduct(editProduct.id, primaryData).catch(err => alert("DB Edit Error: " + err));
     } else {
       addProduct(primaryData).catch(err => alert("DB Add Error: " + err));
-      if (otherDeptId) {
-        addProduct({ ...primaryData, deptId: otherDeptId, quantity: 0 }).catch(err => alert("DB Add Error: " + err));
-      }
     }
     setShowAddModal(false);
   };
@@ -200,12 +213,27 @@ export default function UrunlerPage() {
                 : `${t('productsPage.productsListedIn')} ${getDeptName(filterDept, lang)}: ${filteredProducts.length}`}
             </p>
           </div>
-          {canAdd && (
+          {canAdd && activeTab === 'warehouse' && (
             <button className="btn btn-primary" onClick={openAddModal}>
               ➕ {t('productsPage.newProduct')}
             </button>
           )}
         </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+        <button 
+          className={`btn ${activeTab === 'warehouse' ? 'btn-primary' : 'btn-secondary'}`} 
+          onClick={() => { setActiveTab('warehouse'); setCurrentPage(1); }}
+        >
+          {lang === 'ar' ? 'مخزون المستودع' : 'Warehouse Stock'}
+        </button>
+        <button 
+          className={`btn ${activeTab === 'departments' ? 'btn-primary' : 'btn-secondary'}`} 
+          onClick={() => { setActiveTab('departments'); setCurrentPage(1); }}
+        >
+          {lang === 'ar' ? 'مخزون الأقسام' : 'Department Stocks'}
+        </button>
       </div>
 
       {/* Toolbar */}
@@ -219,9 +247,9 @@ export default function UrunlerPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="filter-select" value={filterDept} disabled={isEditor} onChange={(e) => setFilterDept(e.target.value)}>
-          {!isEditor && <option value="all">{t('productsPage.allDepartments')}</option>}
-          {departments.map(d => (
+        <select className="filter-select" value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
+          <option value="all">{t('productsPage.allDepartments')}</option>
+          {departments.filter(d => d.id !== 'd5').map(d => (
             <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
           ))}
         </select>
@@ -257,58 +285,90 @@ export default function UrunlerPage() {
                 </th>
                 <th>{t('productsPage.table.unit')}</th>
                 <th>{t('productsPage.table.supplier')}</th>
-                <th>{t('productsPage.table.department')}</th>
+                <th>{t('productsPage.table.department')} (Category)</th>
                 <th onClick={() => handleSort('expiry')} style={{ cursor: 'pointer' }}>
                   {t('productsPage.table.expiry')} {sortBy === 'expiry' && (sortDir === 'asc' ? '↑' : '↓')}
                 </th>
                 <th>{t('productsPage.table.status')}</th>
-                <th>{t('productsPage.table.action')}</th>
+                {activeTab === 'warehouse' && <th>{t('productsPage.table.action')}</th>}
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.length === 0 ? (
-                <tr>
-                  <td colSpan={8}>
-                    <div className="empty-state">
-                      <div className="empty-state-icon">📭</div>
-                      <div className="empty-state-text">{t('productsPage.noResults')}</div>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                displayedProducts.map(p => (
-                  <tr key={p.id}>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {canAdd && (
-                          <button className="btn btn-primary btn-sm" style={{ padding: '2px 8px', fontSize: '16px', fontWeight: 'bold', color: '#ffffff', borderRadius: '4px', lineHeight: '1' }} onClick={() => openQuickAddModal(p)} title={lang === 'ar' ? 'إضافة' : 'Add'}>+</button>
-                        )}
-                        <span>{p.name}</span>
-                      </div>
-                    </td>
-                    <td style={{
-                      fontWeight: 700,
-                      color: getStockStatus(p) === 'critical' ? 'var(--color-danger)' : getStockStatus(p) === 'warning' ? 'var(--color-warning)' : 'var(--text-primary)'
-                    }}>
-                      {p.quantity}
-                    </td>
-                    <td>{p[`unit_${lang}`] || p.unit_en}</td>
-                    <td>{p[`supplier_${lang}`] || p.supplier_en}</td>
-                    <td><span className="badge badge-purple">{getDeptName(p.deptId, lang)}</span></td>
-                    <td>{formatDate(p.expiryDate)}</td>
-                    <td>{getStatusBadge(p)}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        {canEdit && (
-                          <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} onClick={() => openEditModal(p)}>✏️</button>
-                        )}
-                        {canDelete && (
-                          <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => setProductToDelete(p)}>🗑️</button>
-                        )}
+              {activeTab === 'warehouse' ? (
+                filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={8}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">📭</div>
+                        <div className="empty-state-text">{t('productsPage.noResults')}</div>
                       </div>
                     </td>
                   </tr>
-                ))
+                ) : (
+                  displayedProducts.map(p => (
+                    <tr key={p.id}>
+                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {canAdd && (
+                            <button className="btn btn-primary btn-sm" style={{ padding: '2px 8px', fontSize: '16px', fontWeight: 'bold', color: '#ffffff', borderRadius: '4px', lineHeight: '1' }} onClick={() => openQuickAddModal(p)} title={lang === 'ar' ? 'إضافة' : 'Add'}>+</button>
+                          )}
+                          <span>{p.name}</span>
+                        </div>
+                      </td>
+                      <td style={{
+                        fontWeight: 700,
+                        color: getStockStatus(p) === 'critical' ? 'var(--color-danger)' : getStockStatus(p) === 'warning' ? 'var(--color-warning)' : 'var(--text-primary)'
+                      }}>
+                        {p.quantity}
+                      </td>
+                      <td>{p[`unit_${lang}`] || p.unit_en}</td>
+                      <td>{p[`supplier_${lang}`] || p.supplier_en}</td>
+                      <td><span className="badge badge-purple">{p.category || 'N/A'}</span></td>
+                      <td>{formatDate(p.expiryDate)}</td>
+                      <td>{getStatusBadge(p)}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {canEdit && (
+                            <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} onClick={() => openEditModal(p)}>✏️</button>
+                          )}
+                          {canDelete && (
+                            <button className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} onClick={() => setProductToDelete(p)}>🗑️</button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )
+              ) : (
+                filteredDeptStock.length === 0 ? (
+                  <tr>
+                    <td colSpan={8}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">📭</div>
+                        <div className="empty-state-text">{t('productsPage.noResults')}</div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredDeptStock.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(ds => {
+                    const prod = products.find(p => p.id === ds.productId);
+                    return (
+                      <tr key={`${ds.productId}-${ds.deptId}`}>
+                        <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {prod ? prod.name : 'Unknown Product'}
+                        </td>
+                        <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {ds.quantity}
+                        </td>
+                        <td>{prod ? (prod[`unit_${lang}`] || prod.unit_en) : ''}</td>
+                        <td>{prod ? (prod[`supplier_${lang}`] || prod.supplier_en) : ''}</td>
+                        <td><span className="badge badge-purple">{getDeptName(ds.deptId, lang)}</span></td>
+                        <td>-</td>
+                        <td><span className="badge badge-success">OK</span></td>
+                      </tr>
+                    );
+                  })
+                )
               )}
             </tbody>
           </table>
@@ -347,19 +407,11 @@ export default function UrunlerPage() {
             <label className="form-label">{t('productsPage.nameLabel')}</label>
             <input className="form-input" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder={t('productsPage.namePlaceholder')} />
           </div>
+          <div className="form-group">
+            <label className="form-label">{t('productsPage.supplierLabel')}</label>
+            <input className="form-input" required value={formData.supplier_en} onChange={(e) => setFormData({ ...formData, supplier_en: e.target.value, supplier_ar: e.target.value })} placeholder={t('productsPage.supplierPlaceholder')} />
+          </div>
           <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">{t('productsPage.qtyLabel')}</label>
-              <input
-                className="form-input"
-                type="number"
-                required
-                min="0"
-                step={['kg', 'liters'].includes(formData.unit_en) ? "0.001" : "0.1"}
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              />
-            </div>
             <div className="form-group">
               <label className="form-label">{t('productsPage.unitLabel')}</label>
               <select className="form-select" value={formData.unit_en} onChange={(e) => {
@@ -378,22 +430,6 @@ export default function UrunlerPage() {
                 <option value="pack">{lang === 'ar' ? 'عبوة' : 'pack'}</option>
               </select>
             </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">{t('productsPage.supplierLabel')}</label>
-            <input className="form-input" required value={formData.supplier_en} onChange={(e) => setFormData({ ...formData, supplier_en: e.target.value, supplier_ar: e.target.value })} placeholder={t('productsPage.supplierPlaceholder')} />
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">{t('productsPage.expiryLabel')}</label>
-              <input
-                className="form-input"
-                type="date"
-                min={todayDateStr}
-                value={formData.expiryDate}
-                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-              />
-            </div>
             <div className="form-group">
               <label className="form-label">{t('productsPage.thresholdLabel')}</label>
               <input
@@ -408,24 +444,14 @@ export default function UrunlerPage() {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">{t('productsPage.deptLabel')}</label>
-            <select className="form-select" value={formData.deptId} disabled={isEditor} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })}>
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
+            <label className="form-label">{lang === 'ar' ? 'فئة' : 'Category'}</label>
+            <select className="form-select" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+              {departments.filter(d => d.id !== 'd5').map(d => (
+                <option key={d.id} value={d.name_en}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
               ))}
             </select>
           </div>
-          {!editProduct && (
-            <div className="form-group">
-              <label className="form-label">{lang === 'ar' ? 'قسم إضافي (تلقائيًا بـ 0)' : 'Additional Dept (Added with 0Qty)'}</label>
-              <select className="form-select" value={formData.otherDeptId} onChange={(e) => setFormData({ ...formData, otherDeptId: e.target.value })}>
-                <option value="">{lang === 'ar' ? '-- لا توجد إضافة أخرى --' : '-- No Additional Dept --'}</option>
-                {departments.filter(d => d.id !== formData.deptId).map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {d[`name_${lang}`] || d.name_en}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>{t('common.cancel')}</button>
             <button type="submit" className="btn btn-primary">{editProduct ? t('productsPage.updateBtn') : t('common.add')}</button>

@@ -210,7 +210,7 @@ export default function AyarlarPage() {
                           color: 'white',
                           flexShrink: 0,
                         }}>
-                          {user.name?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                          {user.name?.split(' ')?.map(w => w[0])?.join('')?.slice(0, 2)?.toUpperCase() || 'U'}
                         </div>
                         <span>{user.name}</span>
                         {isSelf && (

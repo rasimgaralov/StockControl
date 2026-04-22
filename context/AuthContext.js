@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 const AuthContext = createContext(null);
 
@@ -17,57 +18,97 @@ export function AuthProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
-    // Check localStorage for existing session
-    try {
-      const stored = localStorage.getItem('stockcontrol-user');
-      if (stored) {
-        setCurrentUser(JSON.parse(stored));
+    let mounted = true;
+
+    async function getUserProfile(userId) {
+      if (!userId) return null;
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        if (error) {
+           console.error("Error fetching user profile:", error);
+           return null;
+        }
+        return data;
+      } catch (err) {
+        console.error("Error fetching mapping profile:", err);
+        return null;
       }
-    } catch (e) {
-      localStorage.removeItem('stockcontrol-user');
     }
-    setAuthLoading(false);
-  }, []);
 
-  // Redirect logic
-  useEffect(() => {
-    if (authLoading) return;
-    
-    if (!currentUser && pathname !== '/login') {
-      router.push('/login');
-    }
-  }, [currentUser, authLoading, pathname, router]);
-
-  const login = useCallback(async (username, password) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+         setAuthLoading(true);
+         setCurrentUser({
+            ...session.user,
+            role: session.user.user_metadata?.role || 'user',
+            name: session.user.user_metadata?.name || session.user.email,
+            deptId: session.user.user_metadata?.deptId || null,
+            username: session.user.user_metadata?.username || ''
+         });
+         setAuthLoading(false);
+      } else {
+         setCurrentUser(null);
+         setAuthLoading(false);
+      }
     });
 
-    const data = await res.json();
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
-    if (!res.ok) {
-      throw new Error(data.error || 'Giriş başarısız');
+  const login = useCallback(async (identifier, password) => {
+    setAuthLoading(true);
+
+    let loginEmail = identifier;
+
+    // Check if identifier is a username (no @ symbol)
+    if (!identifier.includes('@')) {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('username', identifier)
+        .single();
+      
+      if (userError || !userData?.email) {
+        setAuthLoading(false);
+        throw new Error('Geçersiz kullanıcı adı veya şifre');
+      }
+      loginEmail = userData.email;
     }
 
-    setCurrentUser(data.user);
-    localStorage.setItem('stockcontrol-user', JSON.stringify(data.user));
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password,
+    });
+
+    if (error) {
+      setAuthLoading(false);
+      throw new Error(error.message || 'Giriş başarısız');
+    }
+
     router.push('/');
     return data.user;
-  }, [router]);
+  }, [router, supabase]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setCurrentUser(null);
-    localStorage.removeItem('stockcontrol-user');
     router.push('/login');
-  }, [router]);
+  }, [router, supabase]);
 
   const hasPermission = useCallback((action) => {
     if (!currentUser) return false;
-    const perms = ROLE_PERMISSIONS[currentUser.role] || ROLE_PERMISSIONS.user;
+    const role = currentUser.role || 'user';
+    const perms = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.user;
     return perms[action] || false;
   }, [currentUser]);
 
@@ -79,7 +120,8 @@ export function AuthProvider({ children }) {
       editor: 'Editor',
       user: 'User',
     };
-    return roleNames[currentUser.role] || currentUser.role;
+    const role = currentUser.role || 'user';
+    return roleNames[role] || role;
   }, [currentUser]);
 
   const value = {
@@ -89,6 +131,7 @@ export function AuthProvider({ children }) {
     logout,
     hasPermission,
     getRoleName,
+    supabase,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

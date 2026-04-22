@@ -32,13 +32,26 @@ export default function TransferlerPage() {
 
   const filteredModalProducts = useMemo(() => {
     let result = products;
-    if (formData.toDeptId) {
-      result = result.filter(p => p.deptId === formData.toDeptId);
+    if (formData.fromDeptId) {
+      result = result.filter(p => p.deptId === formData.fromDeptId);
     }
-    if (!productSearch || !showDropdown) return result;
-    const q = productSearch.toLowerCase();
-    return result.filter(p => p.name.toLowerCase().includes(q));
-  }, [products, productSearch, showDropdown, formData.toDeptId]);
+    
+    // If there is a search term, search across ALL warehouse products
+    if (productSearch && showDropdown) {
+      const q = productSearch.toLowerCase();
+      return result.filter(p => p.name.toLowerCase().includes(q));
+    }
+    
+    // If there is no search term, but a target department is selected, filter by category
+    if (formData.toDeptId) {
+      const targetDept = departments.find(d => d.id === formData.toDeptId);
+      if (targetDept) {
+        result = result.filter(p => p.category === targetDept.name_en);
+      }
+    }
+    
+    return result;
+  }, [products, productSearch, showDropdown, formData.fromDeptId, formData.toDeptId, departments]);
 
   const filtered = useMemo(() => {
     let result = transfersList;
@@ -72,18 +85,15 @@ export default function TransferlerPage() {
   }, [transfersList, filterDept, startDate, endDate, sortBy, sortDir, getProductName]);
 
   const openModal = () => {
-    const warehouseDept = departments.find(d => d.name_en === 'Warehouse' || d.name_en === 'Depo') || departments[0];
-    const defaultToDeptId = departments[0]?.id || '';
-    const deptProducts = products.filter(p => p.deptId === defaultToDeptId);
-    const defaultProduct = deptProducts[0];
+    const warehouseDept = departments.find(d => d.name_en === 'Warehouse' || d.name_en === 'Depo') || departments.find(d => d.id === 'd5') || departments[0];
 
     setFormData({
-      productId: defaultProduct?.id || '',
+      productId: '',
       fromDeptId: warehouseDept?.id || '',
-      toDeptId: defaultToDeptId,
+      toDeptId: '',
       quantity: ''
     });
-    setProductSearch(defaultProduct?.name || '');
+    setProductSearch('');
     setShowDropdown(false);
     setErrorMsg('');
     setShowModal(true);
@@ -91,6 +101,10 @@ export default function TransferlerPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.toDeptId || !formData.productId) {
+      setErrorMsg(t('common.fillRequired') || 'Lütfen departman ve ürün seçin.');
+      return;
+    }
     if (formData.fromDeptId === formData.toDeptId) {
       setErrorMsg(t('transfersPage.errSameDept'));
       return;
@@ -331,22 +345,17 @@ export default function TransferlerPage() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">{t('transfersPage.sourceLabel')}</label>
-              <select className="form-select" value={formData.fromDeptId} disabled={currentUser?.role === 'editor'} onChange={(e) => setFormData({ ...formData, fromDeptId: e.target.value })} style={currentUser?.role === 'editor' ? { backgroundColor: 'var(--bg-surface-hover)', cursor: 'not-allowed' } : {}}>
-                {departments.map(d => (
-                  <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
-                ))}
-              </select>
+              <div className="form-input" style={{ backgroundColor: 'var(--bg-surface-hover)', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {warehouseDept?.icon} {warehouseDept ? (warehouseDept[`name_${lang}`] || warehouseDept.name_en) : 'Warehouse'}
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label">{t('transfersPage.targetLabel')}</label>
-              <select className="form-select" value={formData.toDeptId} onChange={(e) => {
-                const selectedDeptId = e.target.value;
-                const deptProducts = products.filter(p => p.deptId === selectedDeptId);
-                const defaultProd = deptProducts[0];
-                setFormData({ ...formData, toDeptId: selectedDeptId, productId: defaultProd?.id || '' });
-                setProductSearch(defaultProd?.name || '');
+              <select className="form-select" required value={formData.toDeptId} onChange={(e) => {
+                setFormData({ ...formData, toDeptId: e.target.value });
               }}>
-                {departments.map(d => (
+                <option value="" disabled>{lang === 'ar' ? 'حدد القسم' : 'Select Department'}</option>
+                {departments.filter(d => d.id !== formData.fromDeptId).map(d => (
                   <option key={d.id} value={d.id}>{d.icon} {(d[`name_${lang}`] || d.name_en)}</option>
                 ))}
               </select>
@@ -392,7 +401,14 @@ export default function TransferlerPage() {
                         key={p.id} 
                         style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)', fontSize: '14px', background: formData.productId === p.id ? 'var(--bg-surface-hover)' : 'transparent' }}
                         onMouseDown={() => {
-                          setFormData({ ...formData, productId: p.id });
+                          let newToDeptId = formData.toDeptId;
+                          if (p.category) {
+                            const matchingDept = departments.find(d => d.name_en === p.category);
+                            if (matchingDept) {
+                              newToDeptId = matchingDept.id;
+                            }
+                          }
+                          setFormData({ ...formData, productId: p.id, toDeptId: newToDeptId });
                           setProductSearch(p.name);
                           setShowDropdown(false);
                         }}

@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function LoginPage() {
   const { login } = useAuth();
   const { t, lang, changeLanguage } = useLanguage();
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(username, password);
+      await login(identifier, password);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -116,13 +116,12 @@ export default function LoginPage() {
               marginBottom: '8px',
               letterSpacing: '0.3px',
             }}>
-              {t('login.username')}
             </label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder={t('login.username')}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder={lang === 'ar' ? 'البريد الإلكتروني أو اسم المستخدم' : 'Email or Username'}
               required
               autoFocus
               style={{
